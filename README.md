@@ -1,3 +1,3 @@
 # ProjetVeloAppMobile
 
-https://img.shields.io/badge/Techno-Flutter-green
+![Static Badge](https://img.shields.io/badge/Techno-Flutter-green)
