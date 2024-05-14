@@ -1,1 +1,3 @@
-# projet_velo_app_mobile
+# ProjetVeloAppMobile
+
+https://img.shields.io/badge/Techno-Flutter-green
