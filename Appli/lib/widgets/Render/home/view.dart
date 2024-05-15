@@ -4,6 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
 
+
 import '../../../POO/IncidentType.dart';
 
 class MobileView {
@@ -17,6 +18,7 @@ class MobileView {
   Function updateMarkers;
 
 
+
   MobileView({
     required this.context,
     required this.isLoading,
@@ -27,6 +29,7 @@ class MobileView {
     required this.selectedIndices,
     required this.updateMarkers,
   });
+
 
   final TextStyle selectedTextStyle = const TextStyle(
     color: Colors.white,

@@ -9,6 +9,7 @@ import '../../../POO/IncidentType.dart';
 import '../../../POO/Localisation.dart';
 import 'view.dart';
 
+
 class Map extends StatefulWidget {
   const Map({super.key});
 
@@ -30,6 +31,7 @@ class MapState extends State<Map> {
   ];
 
   late int nbSelectedIndices;
+
 
 
   void startLoading() async {
