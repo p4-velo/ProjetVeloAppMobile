@@ -38,12 +38,6 @@ dependencies:
   url_strategy: ^0.2.0
   flutter_native_splash: ^2.4.0
 
-flutter_native_splash:
-  color: '#102A5B'
-  image: assets/icons/app_icon.png
-  android_12:
-    image: assets/icons/app_icon.png
-
 dev_dependencies:
   flutter_test:
     sdk: flutter

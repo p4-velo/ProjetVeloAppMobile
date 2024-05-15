@@ -2,12 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:skeletton_projet_velo/router.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 void main() {
   usePathUrlStrategy();
-  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   runApp(const MyApp());
 }
 
@@ -21,7 +18,6 @@ class MyApp extends StatefulWidget {
 class MyAppState extends State<MyApp> {
   @override
   void initState(){
-    FlutterNativeSplash.remove();
     super.initState();
   }
 
