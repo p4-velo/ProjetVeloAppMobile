@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:skeletton_projet_velo/widgets/Layout/view_model.dart';
-import 'package:skeletton_projet_velo/widgets/Render/Help/view_model.dart';
+import 'package:projet_velo_app_mobile/widgets/Layout/view_model.dart';
+import 'package:projet_velo_app_mobile/widgets/Render/Help/view_model.dart';
 
 class HelpPage extends StatelessWidget {
   const HelpPage({super.key});

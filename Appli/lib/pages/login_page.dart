@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:skeletton_projet_velo/widgets/Render/Login/view_model.dart';
+import 'package:projet_velo_app_mobile/widgets/Render/Login/view_model.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});

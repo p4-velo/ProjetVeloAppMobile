@@ -20,7 +20,7 @@ class MobileView {
               const Text('login'),
               ElevatedButton(
                 onPressed: () {
-                  context.go('/page1');
+                  context.go('/map');
                 },
                 child: const Text('Page1')
               )
