@@ -5,7 +5,6 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 
 void main() {
   usePathUrlStrategy();
-
   runApp(const MyApp());
 }
 
@@ -17,6 +16,11 @@ class MyApp extends StatefulWidget {
 }
 
 class MyAppState extends State<MyApp> {
+  @override
+  void initState(){
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
