@@ -18,7 +18,7 @@ class MapPage extends StatelessWidget {
               Expanded(
                 child: Center(
                   child: Layout(
-                    body: Map(),
+                    body: Home(),
                   )
                 ),
               )

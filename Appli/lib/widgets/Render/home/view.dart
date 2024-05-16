@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+
 
 
 import '../../../POO/IncidentType.dart';
@@ -18,6 +17,9 @@ class MobileView {
   List<IncidentType> incidentsTypes;
   List<int> selectedIndices;
   Function updateMarkers;
+  Function searchAddresses;
+  Function getCoordinates;
+  List<String> adresses = [];
 
 
 
@@ -30,6 +32,8 @@ class MobileView {
     required this.incidentsTypes,
     required this.selectedIndices,
     required this.updateMarkers,
+    required this.searchAddresses,
+    required this.getCoordinates,
   });
 
 
@@ -43,48 +47,20 @@ class MobileView {
     fontWeight: FontWeight.bold,
   );
 
-
-  Future<List<String>> searchAddresses(String query) async {
-    final response = await http.get(Uri.parse('https://nominatim.openstreetmap.org/search?q=$query&countrycodes=fr&format=json'));
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      // debugPrint('Data: $data');
-
-      final List<String> places = data
-          .where((entry) => entry['addresstype'] == 'place') // Filtrer les entrées pour inclure uniquement les places
-          .map<String>((e) => e['display_name'] as String)
-          .where((address) => address.contains('21000')) // Filtrer les adresses pour inclure uniquement celles avec le code postal "21000"
-          .toList();
-
-      return places;
-    } else {
-      throw Exception('Failed to search addresses');
-    }
+  String formatAddress(String address) {
+    // Divisez l'adresse en parties en utilisant la virgule comme séparateur
+    List<String> parts = address.split(',');
+    // Récupérez les parties pertinentes de l'adresse
+    String formattedAddress = '${parts[0]}  ${parts[1]}, ${parts[3]}';
+    return formattedAddress;
   }
 
-  Future<Map<String, double>> getCoordinates(String address) async {
-    final response = await http.get(Uri.parse('https://nominatim.openstreetmap.org/search?format=json&q=$address'));
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      if (data.isNotEmpty) {
-        final Map<String, dynamic> firstResult = data.first;
-        final double lat = double.parse(firstResult['lat']);
-        final double lon = double.parse(firstResult['lon']);
-        return {'latitude': lat, 'longitude': lon};
-      } else {
-        throw Exception('No results found for the address');
-      }
-    } else {
-      throw Exception('Failed to fetch coordinates');
-    }
-  }
 
   render() {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         return Scaffold(
+          resizeToAvoidBottomInset: false,
           floatingActionButton: Transform.scale(
             scale: 1.3,
             child: FloatingActionButton(
@@ -107,12 +83,15 @@ class MobileView {
                     initialCenter: points[0],
                     initialZoom: 14,
                     maxZoom: 20,
-                    onTap: (_, __) => popupcontroller.hideAllPopups(), // Hide popup when the map is tapped.
+                    onTap: (_, __) {
+                      popupcontroller.hideAllPopups();
+                      FocusScope.of(context).unfocus();
+                    }// Cacher le clavier
+// Hide popup when the map is tapped.
                   ),
                   children: <Widget>[
                     TileLayer(
-                      urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      subdomains: const ['a', 'b', 'c'],
+                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     ),
                     MarkerClusterLayerWidget(
                       options: MarkerClusterLayerOptions(
@@ -192,7 +171,7 @@ class MobileView {
                                 ),
                                 border: InputBorder.none, // Pas de bordure
                               ),
-                              onChanged: (value) {
+                              onSubmitted: (value) {
                                 if (value.length >= 5) {
                                   searchAddresses(value).then((addresses) async {
                                     debugPrint('Addresses: $addresses');
@@ -201,7 +180,8 @@ class MobileView {
                                       try {
                                         Map<String, double> coordinates = await getCoordinates(addresses[0]);
                                         debugPrint('Latitude: ${coordinates['latitude']}, Longitude: ${coordinates['longitude']}');
-                                        // Mettez à jour l'interface utilisateur avec les coordonnées récupérées
+                                        adresses = addresses;
+
                                       } catch (error) {
                                         // Gérez les erreurs, par exemple affichez un message d'erreur à l'utilisateur
                                         debugPrint('Error getting coordinates: $error');
@@ -214,16 +194,50 @@ class MobileView {
                                     // Gérez les erreurs, par exemple affichez un message d'erreur à l'utilisateur
                                     debugPrint('Error searching addresses: $error');
                                   });
-
                                 }
                                 // Traitez la saisie de l'utilisateur ici
                               },
                             ),
                           ),
+
                         ],
                       ),
                     ),
                   ),
+                  if (adresses.isNotEmpty)
+                    IntrinsicHeight(
+                      child: Container(
+                        color: Colors.white,
+                        margin: const EdgeInsets.all(8.0),
+                        child: SingleChildScrollView(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: adresses
+                                  .map<Widget>((address) {
+                                // Extraire la partie souhaitée de l'adresse
+                                String formattedAddress = formatAddress(address);
+                                return ListTile(
+                                  title: Text(formattedAddress),
+                                  onTap: () async {
+                                    try {
+                                      Map<String, double> coordinates = await getCoordinates(address);
+                                      debugPrint('Latitude: ${coordinates['latitude']}, Longitude: ${coordinates['longitude']}');
+                                      // Mettez à jour l'interface utilisateur avec les coordonnées récupérées
+                                    } catch (error) {
+                                      // Gérez les erreurs de récupération des coordonnées
+                                      debugPrint('Error getting coordinates: $error');
+                                    }
+                                  },
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
                     child: SizedBox(
@@ -280,3 +294,4 @@ class MobileView {
     );
   }
 }
+

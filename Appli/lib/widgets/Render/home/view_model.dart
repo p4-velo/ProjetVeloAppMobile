@@ -8,10 +8,11 @@ import '../../../POO/Incident.dart';
 import '../../../POO/IncidentType.dart';
 import '../../../POO/Localisation.dart';
 import 'view.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-
-class Map extends StatefulWidget {
-  const Map({super.key});
+class Home extends StatefulWidget {
+  const Home({super.key});
 
   @override
   MapState createState() {
@@ -19,7 +20,7 @@ class Map extends StatefulWidget {
   }
 }
 
-class MapState extends State<Map> {
+class MapState extends State<Home> {
   bool isLoading = false;
   final PopupController _popupController = PopupController();
   late  List<Incident> incidents;
@@ -29,10 +30,10 @@ class MapState extends State<Map> {
     const LatLng(47.322, 5.041),
     const LatLng(49.8566, 3.3522),
   ];
+  List<String> addresses = [];
+
 
   late int nbSelectedIndices;
-
-
 
   void startLoading() async {
     setState(() {
@@ -65,7 +66,6 @@ class MapState extends State<Map> {
       ),
     )
         .toList();
-    debugPrint('Markers: $markers');
     selectAll();
     _updateMarkers(_selectedIndices);
     super.initState();
@@ -82,6 +82,8 @@ class MapState extends State<Map> {
       incidentsTypes : _incidentTypes,
       selectedIndices : _selectedIndices,
       updateMarkers: _updateMarkers,
+      searchAddresses: searchAddresses,
+      getCoordinates: getCoordinates,
 
     );
 
@@ -150,7 +152,6 @@ class MapState extends State<Map> {
         selectedIncidents.addAll(incidents.where((incident) => incident.incidentType == _incidentTypes[i]));
       }
     }
-    debugPrint('Selected incidents update : $selectedIncidents');
     setState(() {
       markers = selectedIncidents.map<Marker>((incident) {
         return Marker(
@@ -163,8 +164,6 @@ class MapState extends State<Map> {
       }).toList();
     });
   }
-
-
 
   final List<IncidentType> _incidentTypes = [
     IncidentType(name: 'Travaux', icon: Icons.construction),
@@ -195,4 +194,44 @@ class MapState extends State<Map> {
       _selectedIndices.clear();
     });
   }
+
+
+  Future<List<String>> searchAddresses(String query) async {
+    final response = await http.get(Uri.parse('https://nominatim.openstreetmap.org/search?q=$query&countrycodes=fr&format=json'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      // debugPrint('Data: $data');
+
+      final List<String> places = data
+          .where((entry) => entry['addresstype'] == 'place') // Filtrer les entrées pour inclure uniquement les places
+          .map<String>((e) => e['display_name'] as String)
+          .where((address) => address.contains('21000')) // Filtrer les adresses pour inclure uniquement celles avec le code postal "21000"
+          .toList();
+
+      return places;
+    } else {
+      throw Exception('Failed to search addresses');
+    }
+  }
+
+  Future<Map<String, double>> getCoordinates(String address) async {
+    final response = await http.get(Uri.parse('https://nominatim.openstreetmap.org/search?format=json&q=$address'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      if (data.isNotEmpty) {
+        final Map<String, dynamic> firstResult = data.first;
+        final double lat = double.parse(firstResult['lat']);
+        final double lon = double.parse(firstResult['lon']);
+        return {'latitude': lat, 'longitude': lon};
+      } else {
+        throw Exception('No results found for the address');
+      }
+    } else {
+      throw Exception('Failed to fetch coordinates');
+    }
+  }
+
+
 }

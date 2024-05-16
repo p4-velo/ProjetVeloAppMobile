@@ -36,14 +36,14 @@ class AppRouter {
           path: '/map',
           pageBuilder: (context, state) => CustomTransitionPage(
             transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
-            child: const Page1page(),
+            child: const MapPage(),
           )
         ),
         GoRoute(
           path: '/page1',
           pageBuilder: (context, state) => CustomTransitionPage(
             transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
-            child: const MapPage(),
+            child: const Page1page(),
           )
         ),
         GoRoute(

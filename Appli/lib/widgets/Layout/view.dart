@@ -48,11 +48,11 @@ class MobileView {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: <Widget>[
                       MenuItem(
-                        goToRoute: '/map',
+                        goToRoute: '/page1',
                         icon: Icons.star_outline,
                       ),
                       MenuItem(
-                        goToRoute: '/page1',
+                        goToRoute: '/map',
                         icon: Icons.map,
                       ),
                       MenuItem(
