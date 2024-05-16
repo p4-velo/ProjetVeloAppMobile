@@ -12,6 +12,13 @@ class SignUp extends StatefulWidget {
 
 class SignUpState extends State<SignUp> {
   bool isLoading = false;
+  dynamic fNameKey = GlobalKey<FormState>();
+  dynamic lNameKey = GlobalKey<FormState>();
+  dynamic usernameKey = GlobalKey<FormState>();
+  dynamic emailKey = GlobalKey<FormState>();
+  dynamic password1 = GlobalKey<FormState>();
+  dynamic password2 = GlobalKey<FormState>();
+
 
   void startLoading() async {
     setState(() {
@@ -40,6 +47,12 @@ class SignUpState extends State<SignUp> {
     var currentView = MobileView(
       context: context,
       isLoading: isLoading,
+      fNameKey: fNameKey,
+      lNameKey: lNameKey,
+      usernameKey: usernameKey,
+      emailKey: emailKey,
+      password1: password1,
+      password2: password2,
     );
 
     return currentView.render();
