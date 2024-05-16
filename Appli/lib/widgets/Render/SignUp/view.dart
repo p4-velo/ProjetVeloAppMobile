@@ -1,13 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'view_model.dart';
 
 class MobileView {
   BuildContext context;
   bool isLoading;
+  dynamic fNameKey;
+  dynamic lNameKey;
+  dynamic usernameKey;
+  dynamic emailKey;
+  dynamic password1;
+  dynamic password2;
 
   MobileView({
     required this.context,
     required this.isLoading,
+    required this.fNameKey,
+    required this.lNameKey,
+    required this.usernameKey,
+    required this.emailKey,
+    required this.password1,
+    required this.password2,
   });
 
   render() {
@@ -56,45 +70,172 @@ class MobileView {
                           SizedBox(
                             height: MediaQuery.of(context).size.height * 0.02,
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 30, right: 30),
-                            child: Material(
-                              elevation: 4,
-                              borderRadius: BorderRadius.circular(
-                                  MediaQuery.of(context).size.width * 0.1),
-                              child: TextFormField(
-                                cursorColor: const Color(0xFF102a5b),
-                                decoration: InputDecoration(
-                                  hintText: "Prénom",
-                                  hintStyle: GoogleFonts.ptSans(
-                                    textStyle: TextStyle(color: Colors.grey, fontSize: 18),
-                                  ),
-                                  prefixIcon: Icon(
-                                    Icons.person,
-                                    size: MediaQuery.of(context).size.width * 0.06,
-                                    color: Colors.grey,
-                                  ),
-                                  prefixIconConstraints: BoxConstraints(
-                                    minWidth: MediaQuery.of(context).size.width * 0.12,
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(
-                                          MediaQuery.of(context).size.width * 0.1),
+
+                          Form(
+                            key: fNameKey,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 30, right: 30),
+                              child: Material(
+                                elevation: 4,
+                                borderRadius: BorderRadius.circular(MediaQuery.of(context).size.width * 0.1),
+                                child: TextFormField(
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Renseignez ce champ';
+                                    }
+                                    print("Prénom : " + value);
+                                    return null;
+                                  },
+                                  cursorColor: const Color(0xFF102a5b),
+                                  decoration: InputDecoration(
+                                    hintText: "Prénom",
+                                    hintStyle: GoogleFonts.ptSans(
+                                      textStyle: TextStyle(color: Colors.grey, fontSize: 18),
                                     ),
-                                    borderSide: const BorderSide(
-                                      color: Colors.white,
+                                    prefixIcon: Icon(
+                                      Icons.person,
+                                      size: MediaQuery.of(context).size.width * 0.06,
+                                      color: Colors.grey,
+                                    ),
+                                    prefixIconConstraints: BoxConstraints(
+                                      minWidth: MediaQuery.of(context).size.width * 0.12,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(
+                                            MediaQuery.of(context).size.width * 0.1),
+                                      ),
+                                      borderSide: const BorderSide(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(
+                                            MediaQuery.of(context).size.width * 0.1),
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: const Color(0xff445a80),
+                                        width:
+                                            MediaQuery.of(context).size.width * 0.008,
+                                      ),
                                     ),
                                   ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(
-                                          MediaQuery.of(context).size.width * 0.1),
+                                ),
+                              ),
+                            ),
+                          ),                         
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.02,
+                          ),
+                          Form(
+                            key: lNameKey,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 30, right: 30),
+                              child: Material(
+                                elevation: 4,
+                                borderRadius: BorderRadius.circular(
+                                    MediaQuery.of(context).size.width * 0.1),
+                                child: TextFormField(
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Renseignez ce champ';
+                                    }
+                                    print("Nom : " + value);
+                                    return null;
+                                  },
+                                  cursorColor: const Color(0xFF102a5b),
+                                  decoration: InputDecoration(
+                                    hintText: "Nom",
+                                    hintStyle: GoogleFonts.ptSans(
+                                      textStyle: TextStyle(color: Colors.grey, fontSize: 18),
                                     ),
-                                    borderSide: BorderSide(
-                                      color: const Color(0xff445a80),
-                                      width:
-                                          MediaQuery.of(context).size.width * 0.008,
+                                    prefixIcon: Icon(
+                                      Icons.person,
+                                      size: MediaQuery.of(context).size.width * 0.06,
+                                      color: Colors.grey,
+                                    ),
+                                    prefixIconConstraints: BoxConstraints(
+                                      minWidth: MediaQuery.of(context).size.width * 0.12,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(
+                                            MediaQuery.of(context).size.width * 0.1),
+                                      ),
+                                      borderSide: const BorderSide(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(
+                                            MediaQuery.of(context).size.width * 0.1),
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: const Color(0xff445a80),
+                                        width:
+                                            MediaQuery.of(context).size.width * 0.008,
+                                      ),
+                                    ),
+                                  ),
+                                  keyboardType: TextInputType.visiblePassword,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.02,
+                          ),
+                          Form(
+                            key: usernameKey,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 30, right: 30),
+                              child: Material(
+                                elevation: 4,
+                                borderRadius: BorderRadius.circular(
+                                    MediaQuery.of(context).size.width * 0.1),
+                                child: TextFormField(
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Renseignez ce champ';
+                                    }
+                                    print("Username : " + value);
+                                    return null;
+                                  },
+                                  cursorColor: const Color(0xFF102a5b),
+                                  decoration: InputDecoration(
+                                    hintText: "Nom d'utilisateur",
+                                    hintStyle: GoogleFonts.ptSans(
+                                      textStyle: TextStyle(color: Colors.grey, fontSize: 18),
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.person_4,
+                                      size: MediaQuery.of(context).size.width * 0.06,
+                                      color: Colors.grey,
+                                    ),
+                                    prefixIconConstraints: BoxConstraints(
+                                      minWidth: MediaQuery.of(context).size.width * 0.12,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(
+                                            MediaQuery.of(context).size.width * 0.1),
+                                      ),
+                                      borderSide: const BorderSide(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(
+                                            MediaQuery.of(context).size.width * 0.1),
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: const Color(0xff445a80),
+                                        width:
+                                            MediaQuery.of(context).size.width * 0.008,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -104,110 +245,22 @@ class MobileView {
                           SizedBox(
                             height: MediaQuery.of(context).size.height * 0.02,
                           ),
-                          Padding(
+                          Form(
+                            key: emailKey,
+                            child: Padding(
                             padding: const EdgeInsets.only(left: 30, right: 30),
                             child: Material(
                               elevation: 4,
                               borderRadius: BorderRadius.circular(
                                   MediaQuery.of(context).size.width * 0.1),
                               child: TextFormField(
-                                cursorColor: const Color(0xFF102a5b),
-                                decoration: InputDecoration(
-                                  hintText: "Nom",
-                                  hintStyle: GoogleFonts.ptSans(
-                                    textStyle: TextStyle(color: Colors.grey, fontSize: 18),
-                                  ),
-                                  prefixIcon: Icon(
-                                    Icons.person,
-                                    size: MediaQuery.of(context).size.width * 0.06,
-                                    color: Colors.grey,
-                                  ),
-                                  prefixIconConstraints: BoxConstraints(
-                                    minWidth: MediaQuery.of(context).size.width * 0.12,
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(
-                                          MediaQuery.of(context).size.width * 0.1),
-                                    ),
-                                    borderSide: const BorderSide(
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(
-                                          MediaQuery.of(context).size.width * 0.1),
-                                    ),
-                                    borderSide: BorderSide(
-                                      color: const Color(0xff445a80),
-                                      width:
-                                          MediaQuery.of(context).size.width * 0.008,
-                                    ),
-                                  ),
-                                ),
-                                keyboardType: TextInputType.visiblePassword,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.02,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 30, right: 30),
-                            child: Material(
-                              elevation: 4,
-                              borderRadius: BorderRadius.circular(
-                                  MediaQuery.of(context).size.width * 0.1),
-                              child: TextFormField(
-                                cursorColor: const Color(0xFF102a5b),
-                                decoration: InputDecoration(
-                                  hintText: "Nom d'utilisateur",
-                                  hintStyle: GoogleFonts.ptSans(
-                                    textStyle: TextStyle(color: Colors.grey, fontSize: 18),
-                                  ),
-                                  prefixIcon: Icon(
-                                    Icons.person_4,
-                                    size: MediaQuery.of(context).size.width * 0.06,
-                                    color: Colors.grey,
-                                  ),
-                                  prefixIconConstraints: BoxConstraints(
-                                    minWidth: MediaQuery.of(context).size.width * 0.12,
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(
-                                          MediaQuery.of(context).size.width * 0.1),
-                                    ),
-                                    borderSide: const BorderSide(
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(
-                                          MediaQuery.of(context).size.width * 0.1),
-                                    ),
-                                    borderSide: BorderSide(
-                                      color: const Color(0xff445a80),
-                                      width:
-                                          MediaQuery.of(context).size.width * 0.008,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.02,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 30, right: 30),
-                            child: Material(
-                              elevation: 4,
-                              borderRadius: BorderRadius.circular(
-                                  MediaQuery.of(context).size.width * 0.1),
-                              child: TextFormField(
+                                validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Renseignez ce champ';
+                                    }
+                                    print("eMail : " + value);
+                                    return null;
+                                  },
                                 cursorColor: const Color(0xFF102a5b),
                                 decoration: InputDecoration(
                                   hintText: "Email",
@@ -247,101 +300,124 @@ class MobileView {
                               ),
                             ),
                           ),
+                          ),
                           SizedBox(
                             height: MediaQuery.of(context).size.height * 0.02,
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 30, right: 30),
-                            child: Material(
-                              elevation: 4,
-                              borderRadius: BorderRadius.circular(
-                                  MediaQuery.of(context).size.width * 0.1),
-                              child: TextFormField(
-                                cursorColor: const Color(0xFF102a5b),
-                                decoration: InputDecoration(
-                                  hintText: "Mot de passe",
-                                  hintStyle: GoogleFonts.ptSans(
-                                    textStyle: TextStyle(color: Colors.grey, fontSize: 18),
-                                  ),
-                                  prefixIcon: Icon(
-                                    Icons.lock,
-                                    size: MediaQuery.of(context).size.width * 0.06,
-                                    color: Colors.grey,
-                                  ),
-                                  prefixIconConstraints: BoxConstraints(
-                                    minWidth: MediaQuery.of(context).size.width * 0.12,
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(
-                                          MediaQuery.of(context).size.width * 0.1),
+                          Form(
+                            key: password1,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 30, right: 30),
+                              child: Material(
+                                elevation: 4,
+                                borderRadius: BorderRadius.circular(
+                                    MediaQuery.of(context).size.width * 0.1),
+                                child: TextFormField(
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Renseignez ce champ';
+                                    }
+                                    print("Mot de Passe : " + value);
+                                    return null;
+                                  },
+                                  cursorColor: const Color(0xFF102a5b),
+                                  obscureText: true,
+                                  decoration: InputDecoration(
+                                    hintText: "Mot de passe",
+                                    hintStyle: GoogleFonts.ptSans(
+                                      textStyle: TextStyle(color: Colors.grey, fontSize: 18),
                                     ),
-                                    borderSide: const BorderSide(
-                                      color: Colors.white,
+                                    prefixIcon: Icon(
+                                      Icons.lock,
+                                      size: MediaQuery.of(context).size.width * 0.06,
+                                      color: Colors.grey,
+                                    ),
+                                    prefixIconConstraints: BoxConstraints(
+                                      minWidth: MediaQuery.of(context).size.width * 0.12,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(
+                                            MediaQuery.of(context).size.width * 0.1),
+                                      ),
+                                      borderSide: const BorderSide(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(
+                                            MediaQuery.of(context).size.width * 0.1),
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: const Color(0xff445a80),
+                                        width:
+                                            MediaQuery.of(context).size.width * 0.008,
+                                      ),
                                     ),
                                   ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(
-                                          MediaQuery.of(context).size.width * 0.1),
-                                    ),
-                                    borderSide: BorderSide(
-                                      color: const Color(0xff445a80),
-                                      width:
-                                          MediaQuery.of(context).size.width * 0.008,
-                                    ),
-                                  ),
+                                  keyboardType: TextInputType.emailAddress,
                                 ),
-                                keyboardType: TextInputType.emailAddress,
                               ),
                             ),
                           ),
                           SizedBox(
                             height: MediaQuery.of(context).size.height * 0.02,
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 30, right: 30),
-                            child: Material(
-                              elevation: 4,
-                              borderRadius: BorderRadius.circular(
-                                  MediaQuery.of(context).size.width * 0.1),
-                              child: TextFormField(
-                                cursorColor: const Color(0xFF102a5b),
-                                decoration: InputDecoration(
-                                  hintText: "Confirmer mot de passe",
-                                  hintStyle: GoogleFonts.ptSans(
-                                    textStyle: TextStyle(color: Colors.grey, fontSize: 18),
-                                  ),
-                                  prefixIcon: Icon(
-                                    Icons.lock,
-                                    size: MediaQuery.of(context).size.width * 0.06,
-                                    color: Colors.grey,
-                                  ),
-                                  prefixIconConstraints: BoxConstraints(
-                                    minWidth: MediaQuery.of(context).size.width * 0.12,
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(
-                                          MediaQuery.of(context).size.width * 0.1),
+                          Form(
+                            key: password2,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 30, right: 30),
+                              child: Material(
+                                elevation: 4,
+                                borderRadius: BorderRadius.circular(
+                                    MediaQuery.of(context).size.width * 0.1),
+                                child: TextFormField(
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return "\tRenseignez ce champ";
+                                    }
+                                    print("Mot de Passe (confirmation): " + value);
+                                    return null;
+                                  },
+                                  cursorColor: const Color(0xFF102a5b),
+                                  obscureText: true,
+                                  decoration: InputDecoration(
+                                    hintText: "Confirmer mot de passe",
+                                    hintStyle: GoogleFonts.ptSans(
+                                      textStyle: TextStyle(color: Colors.grey, fontSize: 18),
                                     ),
-                                    borderSide: const BorderSide(
-                                      color: Colors.white,
+                                    prefixIcon: Icon(
+                                      Icons.lock,
+                                      size: MediaQuery.of(context).size.width * 0.06,
+                                      color: Colors.grey,
+                                    ),
+                                    prefixIconConstraints: BoxConstraints(
+                                      minWidth: MediaQuery.of(context).size.width * 0.12,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(
+                                            MediaQuery.of(context).size.width * 0.1),
+                                      ),
+                                      borderSide: const BorderSide(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(
+                                            MediaQuery.of(context).size.width * 0.1),
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: const Color(0xff445a80),
+                                        width:
+                                            MediaQuery.of(context).size.width * 0.008,
+                                      ),
                                     ),
                                   ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(
-                                          MediaQuery.of(context).size.width * 0.1),
-                                    ),
-                                    borderSide: BorderSide(
-                                      color: const Color(0xff445a80),
-                                      width:
-                                          MediaQuery.of(context).size.width * 0.008,
-                                    ),
-                                  ),
+                                  keyboardType: TextInputType.emailAddress,
                                 ),
-                                keyboardType: TextInputType.emailAddress,
                               ),
                             ),
                           ),
@@ -414,12 +490,19 @@ class MobileView {
                                           MediaQuery.of(context).size.height * 0.1,
                                         ),
                                         child: InkWell(
-                                          /*onTap: () {
-                                            Navigator.push(
-                                            context,
-                                            MaterialPageRoute(builder: (context) => const FavoritesAdress()),
-                                          );
-                                          },*/
+                                          onTap: () {
+                                            print("\nInscription :");
+                                            if ( (fNameKey.currentState!.validate()) 
+                                            && (lNameKey.currentState!.validate()) 
+                                            && (usernameKey.currentState!.validate()) 
+                                            && (emailKey.currentState!.validate())
+                                            && (password1.currentState!.validate())
+                                            && (password2.currentState!.validate())) {
+                                              print("Tous les champs ont été complétés");
+                                            } else {
+                                              print("Un champ ou plus est manquant");
+                                            }
+                                          },
                                           borderRadius: BorderRadius.circular(
                                             MediaQuery.of(context).size.height * 0.1,
                                           ),
