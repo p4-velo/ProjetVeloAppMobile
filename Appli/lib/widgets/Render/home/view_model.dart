@@ -22,7 +22,7 @@ class Map extends StatefulWidget {
 class MapState extends State<Map> {
   bool isLoading = false;
   final PopupController _popupController = PopupController();
-  late  List<Incident> incidents;
+  late List<Incident> incidents;
   late List<Marker> markers;
   late int pointIndex;
   List<LatLng> points = [
