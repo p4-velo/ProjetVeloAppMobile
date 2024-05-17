@@ -5,7 +5,6 @@ import 'package:projet_velo_app_mobile/pages/login_page.dart';
 import 'package:projet_velo_app_mobile/pages/fav_address_page.dart';
 import 'package:projet_velo_app_mobile/pages/map_page.dart';
 import 'package:projet_velo_app_mobile/pages/page3_page.dart';
-import 'package:projet_velo_app_mobile/pages/signin_page.dart';
 import 'package:projet_velo_app_mobile/pages/signup_page.dart';
 
 class AppRouter {
@@ -54,13 +53,6 @@ class AppRouter {
           pageBuilder: (context, state) => CustomTransitionPage(
             transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
             child: const Page3page(),
-          )
-        ),
-        GoRoute(
-          path: '/signin',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
-            child: const SignInPage(),
           )
         ),
         GoRoute(
