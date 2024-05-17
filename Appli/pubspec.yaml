@@ -38,6 +38,7 @@ dependencies:
   url_strategy: ^0.2.0
   #open_street_map_search_and_pick: ^0.1.1
   google_fonts: ^6.2.1
+  flutter_native_splash: ^2.4.0
 
 
 dev_dependencies:
