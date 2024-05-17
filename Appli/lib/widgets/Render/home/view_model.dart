@@ -9,6 +9,7 @@ import '../../../POO/IncidentType.dart';
 import '../../../POO/Localisation.dart';
 import 'view.dart';
 
+
 class Map extends StatefulWidget {
   const Map({super.key});
 
@@ -21,7 +22,7 @@ class Map extends StatefulWidget {
 class MapState extends State<Map> {
   bool isLoading = false;
   final PopupController _popupController = PopupController();
-  late  List<Incident> incidents;
+  late List<Incident> incidents;
   late List<Marker> markers;
   late int pointIndex;
   List<LatLng> points = [
@@ -30,6 +31,7 @@ class MapState extends State<Map> {
   ];
 
   late int nbSelectedIndices;
+
 
 
   void startLoading() async {

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:skeletton_projet_velo/widgets/Layout/view_model.dart';
-import 'package:skeletton_projet_velo/widgets/Render/Page1/view_model.dart';
+import 'package:projet_velo_app_mobile/widgets/Layout/view_model.dart';
+import 'package:projet_velo_app_mobile/widgets/Render/favAddress/view_model.dart';
 
-class Page1page extends StatelessWidget {
-  const Page1page({super.key});
+class FavAddressPage extends StatelessWidget {
+  const FavAddressPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +17,7 @@ class Page1page extends StatelessWidget {
               child: MediaQuery(
                 data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
                 child: const Layout(
-                  body: Page1(),
+                  body: FavAddress(),
                 )
               ),
             ),
