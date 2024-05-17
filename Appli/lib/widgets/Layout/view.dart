@@ -56,7 +56,7 @@ class MobileView {
                         icon: Icons.map,
                       ),
                       MenuItem(
-                        goToRoute: '/signup',
+                        goToRoute: '/page3',
                         icon: Icons.person,
                       )
                     ],

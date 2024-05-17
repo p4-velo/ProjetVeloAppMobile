@@ -14,11 +14,9 @@ class LoginPage extends StatelessWidget {
           data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
           child: const Column(
             children: [
-              SafeArea(
-                child: Expanded(
-                  child: Center(
-                    child: LoginForm()
-                  ),
+              Expanded(
+                child: Center(
+                  child: LoginForm()
                 ),
               )
             ]
