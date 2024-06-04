@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:skeletton_projet_velo/widgets/Layout/view_model.dart';
-import 'package:skeletton_projet_velo/widgets/Render/home/view_model.dart';
+import 'package:projet_velo_app_mobile/widgets/Layout/view_model.dart';
+import 'package:projet_velo_app_mobile/widgets/Render/home/view_model.dart';
 
 class MapPage extends StatelessWidget {
   const MapPage({super.key});

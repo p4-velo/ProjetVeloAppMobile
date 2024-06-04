@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:skeletton_projet_velo/pages/login_page.dart';
-import 'package:skeletton_projet_velo/pages/page1_page.dart';
-import 'package:skeletton_projet_velo/pages/map_page.dart';
-import 'package:skeletton_projet_velo/pages/page3_page.dart';
-import 'package:skeletton_projet_velo/pages/signin_page.dart';
-import 'package:skeletton_projet_velo/pages/signup_page.dart';
-import 'package:skeletton_projet_velo/pages/help_page.dart';
-import 'package:skeletton_projet_velo/pages/favadresses_page.dart';
+import 'package:projet_velo_app_mobile/pages/help_page.dart';
+import 'package:projet_velo_app_mobile/pages/login_page.dart';
+import 'package:projet_velo_app_mobile/pages/fav_address_page.dart';
+import 'package:projet_velo_app_mobile/pages/map_page.dart';
+import 'package:projet_velo_app_mobile/pages/page3_page.dart';
+import 'package:projet_velo_app_mobile/pages/signin_page.dart';
+import 'package:projet_velo_app_mobile/pages/signup_page.dart';
 
 class AppRouter {
   static final AppRouter _instance = AppRouter._internal();
@@ -44,10 +43,10 @@ class AppRouter {
           )
         ),
         GoRoute(
-          path: '/page1',
+          path: '/favaddress',
           pageBuilder: (context, state) => CustomTransitionPage(
             transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
-            child: const Page1page(),
+            child: const FavAddressPage(),
           )
         ),
         GoRoute(
@@ -69,13 +68,6 @@ class AppRouter {
           pageBuilder: (context, state) => CustomTransitionPage(
             transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
             child: const SignUpPage(),
-          )
-        ),
-        GoRoute(
-          path: '/favadresses',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
-            child: const FavAdressesPage(),
           )
         ),
         GoRoute(
