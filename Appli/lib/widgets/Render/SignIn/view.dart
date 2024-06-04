@@ -1,13 +1,18 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class MobileView {
   BuildContext context;
   bool isLoading;
+  dynamic emailKey;
+  dynamic passwordKey;
 
   MobileView({
     required this.context,
     required this.isLoading,
+    required this.emailKey,
+    required this.passwordKey,
   });
 
   render() {
@@ -24,10 +29,6 @@ class MobileView {
                   children: [
                     SizedBox(
                       height: MediaQuery.of(context).size.height * 0.01,
-                    ),
-                    Image.asset(
-                      'assets/images/djon-metropole.png',
-                      width: 200,
                     ),
                     SizedBox(
                       height: MediaQuery.of(context).size.height * 0.06,
@@ -56,45 +57,55 @@ class MobileView {
                           SizedBox(
                             height: MediaQuery.of(context).size.height * 0.02,
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 30, right: 30),
-                            child: Material(
-                              elevation: 4,
-                              borderRadius: BorderRadius.circular(
-                                  MediaQuery.of(context).size.width * 0.1),
-                              child: TextFormField(
-                                cursorColor: const Color(0xFF102a5b),
-                                decoration: InputDecoration(
-                                  hintText: "Email",
-                                  hintStyle: GoogleFonts.ptSans(
-                                    textStyle: TextStyle(color: Colors.grey, fontSize: 18),
-                                  ),
-                                  prefixIcon: Icon(
-                                    Icons.mail,
-                                    size: MediaQuery.of(context).size.width * 0.06,
-                                    color: Colors.grey,
-                                  ),
-                                  prefixIconConstraints: BoxConstraints(
-                                    minWidth: MediaQuery.of(context).size.width * 0.12,
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(
-                                          MediaQuery.of(context).size.width * 0.1),
+                          Form(
+                            key: emailKey,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 30, right: 30),
+                              child: Material(
+                                elevation: 4,
+                                borderRadius: BorderRadius.circular(
+                                    MediaQuery.of(context).size.width * 0.1),
+                                child: TextFormField(
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return "Renseignez ce champ";
+                                    }
+                                    print("eMail : " + value);
+                                    return null;
+                                  },
+                                  cursorColor: const Color(0xFF102a5b),
+                                  decoration: InputDecoration(
+                                    hintText: "Email",
+                                    hintStyle: GoogleFonts.ptSans(
+                                      textStyle: TextStyle(color: Colors.grey, fontSize: 18),
                                     ),
-                                    borderSide: const BorderSide(
-                                      color: Colors.white,
+                                    prefixIcon: Icon(
+                                      Icons.mail,
+                                      size: MediaQuery.of(context).size.width * 0.06,
+                                      color: Colors.grey,
                                     ),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(
-                                          MediaQuery.of(context).size.width * 0.1),
+                                    prefixIconConstraints: BoxConstraints(
+                                      minWidth: MediaQuery.of(context).size.width * 0.12,
                                     ),
-                                    borderSide: BorderSide(
-                                      color: const Color(0xff445a80),
-                                      width:
-                                          MediaQuery.of(context).size.width * 0.008,
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(
+                                            MediaQuery.of(context).size.width * 0.1),
+                                      ),
+                                      borderSide: const BorderSide(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(
+                                            MediaQuery.of(context).size.width * 0.1),
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: const Color(0xff445a80),
+                                        width:
+                                            MediaQuery.of(context).size.width * 0.008,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -104,48 +115,58 @@ class MobileView {
                           SizedBox(
                             height: MediaQuery.of(context).size.height * 0.02,
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 30, right: 30),
-                            child: Material(
-                              elevation: 4,
-                              borderRadius: BorderRadius.circular(
-                                  MediaQuery.of(context).size.width * 0.1),
-                              child: TextFormField(
-                                cursorColor: const Color(0xFF102a5b),
-                                decoration: InputDecoration(
-                                  hintText: "Mot de passe",
-                                  hintStyle: GoogleFonts.ptSans(
-                                    textStyle: TextStyle(color: Colors.grey, fontSize: 18),
-                                  ),
-                                  prefixIcon: Icon(
-                                    Icons.lock_outline,
-                                    size: MediaQuery.of(context).size.width * 0.06,
-                                    color: Colors.grey,
-                                  ),
-                                  prefixIconConstraints: BoxConstraints(
-                                    minWidth: MediaQuery.of(context).size.width * 0.12,
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(
-                                          MediaQuery.of(context).size.width * 0.1),
+                          Form(
+                            key: passwordKey,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 30, right: 30),
+                              child: Material(
+                                elevation: 4,
+                                borderRadius: BorderRadius.circular(
+                                    MediaQuery.of(context).size.width * 0.1),
+                                child: TextFormField(
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return "Renseignez ce champ";
+                                    }
+                                    print("Mot de Passe : " + value);
+                                    return null;
+                                  },
+                                  cursorColor: const Color(0xFF102a5b),
+                                  decoration: InputDecoration(
+                                    hintText: "Mot de passe",
+                                    hintStyle: GoogleFonts.ptSans(
+                                      textStyle: TextStyle(color: Colors.grey, fontSize: 18),
                                     ),
-                                    borderSide: const BorderSide(
-                                      color: Colors.white,
+                                    prefixIcon: Icon(
+                                      Icons.lock_outline,
+                                      size: MediaQuery.of(context).size.width * 0.06,
+                                      color: Colors.grey,
+                                    ),
+                                    prefixIconConstraints: BoxConstraints(
+                                      minWidth: MediaQuery.of(context).size.width * 0.12,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(
+                                            MediaQuery.of(context).size.width * 0.1),
+                                      ),
+                                      borderSide: const BorderSide(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(
+                                            MediaQuery.of(context).size.width * 0.1),
+                                      ),
+                                      borderSide: BorderSide(
+                                        color: const Color(0xff445a80),
+                                        width: MediaQuery.of(context).size.width * 0.008,
+                                      ),
                                     ),
                                   ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(
-                                          MediaQuery.of(context).size.width * 0.1),
-                                    ),
-                                    borderSide: BorderSide(
-                                      color: const Color(0xff445a80),
-                                      width: MediaQuery.of(context).size.width * 0.008,
-                                    ),
-                                  ),
+                                  keyboardType: TextInputType.visiblePassword,
                                 ),
-                                keyboardType: TextInputType.visiblePassword,
                               ),
                             ),
                           ),
@@ -163,6 +184,15 @@ class MobileView {
                                     MediaQuery.of(context).size.height * 0.1,
                                   ),
                                   child: InkWell(
+                                    onTap: () {
+                                      print("\nInscription :");
+                                        if ( (emailKey.currentState!.validate()) 
+                                        && (passwordKey.currentState!.validate())) {
+                                          print("Tous les champs ont été complétés");
+                                        } else {
+                                          print("Un champ ou plus est manquant");
+                                        }
+                                    },
                                     borderRadius: BorderRadius.circular(
                                       MediaQuery.of(context).size.height * 0.1,
                                     ),

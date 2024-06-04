@@ -12,6 +12,8 @@ class SignIn extends StatefulWidget {
 
 class SignInState extends State<SignIn> {
   bool isLoading = false;
+  dynamic emailKey = GlobalKey<FormState>();
+  dynamic passwordKey = GlobalKey<FormState>();
 
   void startLoading() async {
     setState(() {
@@ -40,6 +42,8 @@ class SignInState extends State<SignIn> {
     var currentView = MobileView(
       context: context,
       isLoading: isLoading,
+      emailKey: emailKey,
+      passwordKey: passwordKey,
     );
 
     return currentView.render();

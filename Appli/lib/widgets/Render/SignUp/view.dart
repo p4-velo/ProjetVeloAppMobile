@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'view_model.dart';
 
 class MobileView {
   BuildContext context;
@@ -10,8 +9,8 @@ class MobileView {
   dynamic lNameKey;
   dynamic usernameKey;
   dynamic emailKey;
-  dynamic password1;
-  dynamic password2;
+  dynamic password1Key;
+  dynamic password2Key;
 
   MobileView({
     required this.context,
@@ -20,8 +19,8 @@ class MobileView {
     required this.lNameKey,
     required this.usernameKey,
     required this.emailKey,
-    required this.password1,
-    required this.password2,
+    required this.password1Key,
+    required this.password2Key,
   });
 
   render() {
@@ -39,10 +38,6 @@ class MobileView {
                     SizedBox(
                       height: MediaQuery.of(context).size.height * 0.01,
                     ),
-                    //Image.asset(
-                      //'assets/images/djon-metropole.png',
-                      //width: 200,
-                    //),
                     SizedBox(
                       height: MediaQuery.of(context).size.height * 0.06,
                     ),
@@ -305,7 +300,7 @@ class MobileView {
                             height: MediaQuery.of(context).size.height * 0.02,
                           ),
                           Form(
-                            key: password1,
+                            key: password1Key,
                             child: Padding(
                               padding: const EdgeInsets.only(left: 30, right: 30),
                               child: Material(
@@ -365,7 +360,7 @@ class MobileView {
                             height: MediaQuery.of(context).size.height * 0.02,
                           ),
                           Form(
-                            key: password2,
+                            key: password2Key,
                             child: Padding(
                               padding: const EdgeInsets.only(left: 30, right: 30),
                               child: Material(
@@ -496,8 +491,8 @@ class MobileView {
                                             && (lNameKey.currentState!.validate()) 
                                             && (usernameKey.currentState!.validate()) 
                                             && (emailKey.currentState!.validate())
-                                            && (password1.currentState!.validate())
-                                            && (password2.currentState!.validate())) {
+                                            && (password1Key.currentState!.validate())
+                                            && (password2Key.currentState!.validate())) {
                                               print("Tous les champs ont été complétés");
                                             } else {
                                               print("Un champ ou plus est manquant");

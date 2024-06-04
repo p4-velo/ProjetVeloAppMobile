@@ -16,8 +16,8 @@ class SignUpState extends State<SignUp> {
   dynamic lNameKey = GlobalKey<FormState>();
   dynamic usernameKey = GlobalKey<FormState>();
   dynamic emailKey = GlobalKey<FormState>();
-  dynamic password1 = GlobalKey<FormState>();
-  dynamic password2 = GlobalKey<FormState>();
+  dynamic password1Key = GlobalKey<FormState>();
+  dynamic password2Key = GlobalKey<FormState>();
 
 
   void startLoading() async {
@@ -51,8 +51,8 @@ class SignUpState extends State<SignUp> {
       lNameKey: lNameKey,
       usernameKey: usernameKey,
       emailKey: emailKey,
-      password1: password1,
-      password2: password2,
+      password1Key: password1Key,
+      password2Key: password2Key,
     );
 
     return currentView.render();
