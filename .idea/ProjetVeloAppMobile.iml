@@ -6,6 +6,24 @@
       <excludeFolder url="file://$MODULE_DIR$/Appli/.dart_tool" />
       <excludeFolder url="file://$MODULE_DIR$/Appli/.pub" />
       <excludeFolder url="file://$MODULE_DIR$/Appli/build" />
+      <excludeFolder url="file://$MODULE_DIR$/Appli/ios/.symlinks/plugins/flutter_native_splash/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/Appli/ios/.symlinks/plugins/flutter_native_splash/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/Appli/ios/.symlinks/plugins/flutter_native_splash/build" />
+      <excludeFolder url="file://$MODULE_DIR$/Appli/ios/.symlinks/plugins/flutter_native_splash/example/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/Appli/ios/.symlinks/plugins/flutter_native_splash/example/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/Appli/ios/.symlinks/plugins/flutter_native_splash/example/build" />
+      <excludeFolder url="file://$MODULE_DIR$/Appli/ios/.symlinks/plugins/geolocator_apple/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/Appli/ios/.symlinks/plugins/geolocator_apple/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/Appli/ios/.symlinks/plugins/geolocator_apple/build" />
+      <excludeFolder url="file://$MODULE_DIR$/Appli/ios/.symlinks/plugins/geolocator_apple/example/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/Appli/ios/.symlinks/plugins/geolocator_apple/example/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/Appli/ios/.symlinks/plugins/geolocator_apple/example/build" />
+      <excludeFolder url="file://$MODULE_DIR$/Appli/ios/.symlinks/plugins/map_launcher/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/Appli/ios/.symlinks/plugins/map_launcher/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/Appli/ios/.symlinks/plugins/map_launcher/build" />
+      <excludeFolder url="file://$MODULE_DIR$/Appli/ios/.symlinks/plugins/map_launcher/example/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/Appli/ios/.symlinks/plugins/map_launcher/example/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/Appli/ios/.symlinks/plugins/map_launcher/example/build" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

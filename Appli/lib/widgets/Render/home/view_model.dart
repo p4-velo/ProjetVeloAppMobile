@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
@@ -10,6 +9,7 @@ import '../../../POO/Localisation.dart';
 import 'view.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:skeletton_projet_velo/global.dart' as global;
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -22,8 +22,10 @@ class Home extends StatefulWidget {
 
 class MapState extends State<Home> {
   bool isLoading = false;
+  bool isLoadingPage = false;
   final PopupController _popupController = PopupController();
-  late  List<Incident> incidents;
+  final MapController _mapController = MapController();
+  late List<Incident> incidents;
   late List<Marker> markers;
   late int pointIndex;
   List<LatLng> points = [
@@ -31,8 +33,7 @@ class MapState extends State<Home> {
     const LatLng(49.8566, 3.3522),
   ];
   List<String> addresses = [];
-
-
+  bool shouldHideSize = true;
   late int nbSelectedIndices;
 
   void startLoading() async {
@@ -47,6 +48,30 @@ class MapState extends State<Home> {
     });
   }
 
+  void startLoadingPage() async {
+    setState(() {
+      isLoadingPage = true;
+    });
+  }
+
+  void stopLoadingPage() async {
+    setState(() {
+      isLoadingPage = false;
+    });
+  }
+
+  void setAddresses(List<String> addresses) {
+    setState(() {
+      this.addresses = addresses;
+    });
+  }
+
+  setShouldHideSize(bool value) {
+    setState(() {
+      shouldHideSize = value;
+    });
+  }
+
   @override
   void dispose() {
     super.dispose();
@@ -54,20 +79,21 @@ class MapState extends State<Home> {
 
   @override
   void initState() {
-    incidents = generateRandomIncidents(30, );
-    markers = filterIncidentsBySelectedTypes( incidents)
+    startLoadingPage();
+    incidents = generateRandomIncidents(30);
+    markers = filterIncidentsBySelectedTypes(incidents)
         .map<Marker>(
           (incident) => Marker(
         point: LatLng(incident.localisation.latitude, incident.localisation.longitude),
-        child: Icon(
+        child:  Icon(
           incident.incidentType.icon,
-          color: const Color(0XFF1A3972),
+          color: global.primary,
         ),
       ),
-    )
-        .toList();
+    ).toList();
     selectAll();
-    _updateMarkers(_selectedIndices);
+    updateMarkerTag(_selectedIndices);
+    stopLoadingPage();
     super.initState();
   }
 
@@ -79,14 +105,22 @@ class MapState extends State<Home> {
       popupcontroller: _popupController,
       markers: markers,
       points: points,
-      incidentsTypes : _incidentTypes,
-      selectedIndices : _selectedIndices,
-      updateMarkers: _updateMarkers,
+      incidentsTypes: _incidentTypes,
+      selectedIndices: _selectedIndices,
+      updateMarkers: updateMarker,
+      updateMarkersTag: updateMarkerTag,
       searchAddresses: searchAddresses,
       getCoordinates: getCoordinates,
-
+      formatAddress: formatAddress,
+      stopLoading: stopLoading,
+      setAddresses: setAddresses,
+      addressesModel: addresses,
+      shouldHideSize: shouldHideSize,
+      setShouldHideSize: setShouldHideSize,
+      isLoadingPage: isLoadingPage,
+      mapController: _mapController,
+      addMarker: addMarker,
     );
-
     return currentView.render();
   }
 
@@ -101,7 +135,7 @@ class MapState extends State<Home> {
     return LatLng(lat, lng);
   }
 
-// Ajoutez cette fonction pour générer un type d'incident aléatoire
+  // Ajoutez cette fonction pour générer un type d'incident aléatoire
   IncidentType generateRandomIncidentType() {
     final random = Random();
     final incidentTypes = _incidentTypes;
@@ -110,11 +144,10 @@ class MapState extends State<Home> {
     return incidentTypes[index];
   }
 
-// Ajoutez cette fonction pour générer une liste d'incidents aléatoires
+  // Ajoutez cette fonction pour générer une liste d'incidents aléatoires
   List<Incident> generateRandomIncidents(int count) {
     final random = Random();
     final incidents = <Incident>[];
-
     for (int i = 0; i < count; i++) {
       final id = random.nextInt(100000);
       final incidentType = generateRandomIncidentType();
@@ -124,13 +157,12 @@ class MapState extends State<Home> {
         longitude: generateRandomCoordinates().longitude,
       );
       final incident = Incident(id: id, incidentType: incidentType, localisation: location);
-
       incidents.add(incident);
     }
     return incidents;
   }
 
-  List<Incident> filterIncidentsBySelectedTypes(  List<Incident> incidents) {
+  List<Incident> filterIncidentsBySelectedTypes(List<Incident> incidents) {
     final selectedIncidentTypes = getSelectedIncidentTypes();
     final filteredIncidents = <Incident>[];
 
@@ -143,26 +175,42 @@ class MapState extends State<Home> {
     return filteredIncidents;
   }
 
+  void updateMarker( List<Marker> newMarkers) {
+    setState(() {
+      markers = newMarkers;
+    });
+  }
 
-  void _updateMarkers(List<int> selectedIndices) {
+  void addMarker(LatLng point) {
+    Marker marker = Marker(
+      point: point,
+      child: const Icon(
+        Icons.location_on,
+        color: Colors.red, // Choisissez la couleur que vous voulez
+      ),
+    );
+    List<Marker> newMarkers =List.from(markers);
+    newMarkers.add(marker);
+    updateMarker(newMarkers);
+  }
+
+  void updateMarkerTag(List<int> selectedIndices) {
     List<Incident> selectedIncidents = [];
-    debugPrint('Selected indices update horizontalButton: $selectedIndices');
     for (int i = 0; i < nbSelectedIndices; i++) {
       if (selectedIndices.contains(i)) {
         selectedIncidents.addAll(incidents.where((incident) => incident.incidentType == _incidentTypes[i]));
       }
     }
-    setState(() {
-      markers = selectedIncidents.map<Marker>((incident) {
-        return Marker(
-          point: LatLng(incident.localisation.latitude, incident.localisation.longitude),
-          child: Icon(
-            incident.incidentType.icon,
-            color: const Color(0XFF1A3972),
-          ),
-        );
-      }).toList();
-    });
+    List<Marker> listMarkers = selectedIncidents.map<Marker>((incident) {
+      return Marker(
+        point: LatLng(incident.localisation.latitude, incident.localisation.longitude),
+        child : Icon(
+          incident.incidentType.icon,
+          color: global.primary,
+        ),
+      );
+    }).toList();
+    updateMarker(listMarkers);
   }
 
   final List<IncidentType> _incidentTypes = [
@@ -173,7 +221,6 @@ class MapState extends State<Home> {
   ];
 
   final List<int> _selectedIndices = [];
-
 
   List<IncidentType> getSelectedIncidentTypes() {
     return _selectedIndices.map((index) => _incidentTypes[index]).toList();
@@ -195,20 +242,18 @@ class MapState extends State<Home> {
     });
   }
 
-
   Future<List<String>> searchAddresses(String query) async {
+    startLoading();
     final response = await http.get(Uri.parse('https://nominatim.openstreetmap.org/search?q=$query&countrycodes=fr&format=json'));
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
-      // debugPrint('Data: $data');
 
       final List<String> places = data
-          .where((entry) => entry['addresstype'] == 'place') // Filtrer les entrées pour inclure uniquement les places
+          .where((entry) => entry['addresstype'] == 'place')
           .map<String>((e) => e['display_name'] as String)
-          .where((address) => address.contains('21000')) // Filtrer les adresses pour inclure uniquement celles avec le code postal "21000"
+          .where((address) => address.contains('21000'))
           .toList();
-
       return places;
     } else {
       throw Exception('Failed to search addresses');
@@ -233,5 +278,10 @@ class MapState extends State<Home> {
     }
   }
 
+  String formatAddress(String address) {
+    List<String> parts = address.split(',');
+    String formattedAddress = '${parts[0]}  ${parts[1]}, ${parts[3]}';
 
+    return formattedAddress;
+  }
 }

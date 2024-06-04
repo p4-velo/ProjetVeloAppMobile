@@ -1,11 +1,10 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
-
-
-
+import 'package:open_street_map_search_and_pick/open_street_map_search_and_pick.dart';
+import 'package:skeletton_projet_velo/global.dart' as global;
+import 'package:skeletton_projet_velo/widgets/CustomWidget/CustomLoader/view_model.dart';
 import '../../../POO/IncidentType.dart';
 
 class MobileView {
@@ -17,10 +16,18 @@ class MobileView {
   List<IncidentType> incidentsTypes;
   List<int> selectedIndices;
   Function updateMarkers;
+  Function updateMarkersTag;
   Function searchAddresses;
   Function getCoordinates;
-  List<String> adresses = [];
-
+  Function formatAddress;
+  Function stopLoading;
+  Function setAddresses;
+  List<String> addressesModel;
+  bool shouldHideSize;
+  Function setShouldHideSize;
+  bool isLoadingPage;
+  MapController mapController;
+  Function addMarker;
 
 
   MobileView({
@@ -32,53 +39,65 @@ class MobileView {
     required this.incidentsTypes,
     required this.selectedIndices,
     required this.updateMarkers,
+    required this.updateMarkersTag,
     required this.searchAddresses,
     required this.getCoordinates,
+    required this.formatAddress,
+    required this.stopLoading,
+    required this.setAddresses,
+    required this.addressesModel,
+    required this.shouldHideSize,
+    required this.setShouldHideSize,
+    required this.isLoadingPage,
+    required this.mapController,
+    required this.addMarker,
   });
-
 
   final TextStyle selectedTextStyle = const TextStyle(
     color: Colors.white,
     fontWeight: FontWeight.bold,
   );
 
-  final TextStyle unselectedTextStyle = const TextStyle(
-    color: Color(0XFF102a5b),
+  final TextStyle unselectedTextStyle = TextStyle(
+    color: global.secondary,
     fontWeight: FontWeight.bold,
   );
 
-  String formatAddress(String address) {
-    // Divisez l'adresse en parties en utilisant la virgule comme séparateur
-    List<String> parts = address.split(',');
-    // Récupérez les parties pertinentes de l'adresse
-    String formattedAddress = '${parts[0]}  ${parts[1]}, ${parts[3]}';
-    return formattedAddress;
-  }
 
+  void moveCamera(LatLng point) {
+    mapController.move(point, 17);
+  }
 
   render() {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        return Scaffold(
+        return isLoadingPage
+            ? const CustomLoader()
+            : Scaffold(
           resizeToAvoidBottomInset: false,
           floatingActionButton: Transform.scale(
             scale: 1.3,
             child: FloatingActionButton(
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30.0), // Changez ce rayon selon vos besoins
+                borderRadius: BorderRadius.circular(30.0),
               ),
-              child: const Icon(Icons.warning, color: Color(0XFF1A3972), size: 35,),
+              child: Icon(
+                Icons.warning,
+                color: global.primary,
+                size: 35,
+              ),
               onPressed: () {
-                //to do
               },
             ),
           ),
           body: Stack(
             children: [
+              const SizedBox(),
               PopupScope(
                 popupController: popupcontroller,
                 child: FlutterMap(
+                  mapController: mapController,
                   options: MapOptions(
                     initialCenter: points[0],
                     initialZoom: 14,
@@ -86,8 +105,8 @@ class MobileView {
                     onTap: (_, __) {
                       popupcontroller.hideAllPopups();
                       FocusScope.of(context).unfocus();
-                    }// Cacher le clavier
-// Hide popup when the map is tapped.
+                      setShouldHideSize(true);
+                    },
                   ),
                   children: <Widget>[
                     TileLayer(
@@ -106,24 +125,25 @@ class MobileView {
                         maxZoom: 15,
                         markers: markers,
                         popupOptions: PopupOptions(
-                            popupSnap: PopupSnap.markerTop,
-                            popupController: popupcontroller,
-                            popupBuilder: (_, marker) => Container(
-                              width: 200,
-                              height: 100,
-                              color: Colors.white,
-                              child: GestureDetector(
-                                onTap: () => debugPrint('Popup tap!'),
-                                child: const Text(
-                                  'Le nom du POI',
-                                ),
+                          popupSnap: PopupSnap.markerTop,
+                          popupController: popupcontroller,
+                          popupBuilder: (_, marker) => Container(
+                            width: 200,
+                            height: 100,
+                            color: Colors.white,
+                            child: GestureDetector(
+                              onTap: () => debugPrint('Popup tap!'),
+                              child: const Text(
+                                'Le nom du POI',
                               ),
-                            )),
-                        builder: (context, markers) {
+                            ),
+                          ),
+                        ),
+                        builder : (context, markers) {
                           return Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
-                              color: const Color(0XFF1A3972),
+                              color: global.primary,
                             ),
                             child: Center(
                               child: Text(
@@ -140,13 +160,12 @@ class MobileView {
               ),
               Column(
                 children: [
-                  // La barre de recherche est le premier enfant de la colonne
                   Padding(
                     padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0.0),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white, // Fond blanc
-                        borderRadius: BorderRadius.circular(30), // Bord arrondi
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(30),
                       ),
                       child: Row(
                         children: [
@@ -154,8 +173,8 @@ class MobileView {
                             margin: const EdgeInsets.only(right: 15, left: 4.0),
                             padding: const EdgeInsets.all(8.0),
                             decoration: BoxDecoration(
-                              color: const Color(0XFF1A3972),
-                              borderRadius: BorderRadius.circular(30), // Bord arrondi
+                              color: global.primary,
+                              borderRadius: BorderRadius.circular(30),
                             ),
                             child: const Icon(
                               Icons.search,
@@ -167,77 +186,76 @@ class MobileView {
                               decoration: const InputDecoration(
                                 hintText: 'Rechercher un lieu ',
                                 hintStyle: TextStyle(
-                                  color: Colors.grey, // Texte gris
+                                  color: Colors.grey,
                                 ),
-                                border: InputBorder.none, // Pas de bordure
+                                border: InputBorder.none,
                               ),
                               onSubmitted: (value) {
-                                if (value.length >= 5) {
-                                  searchAddresses(value).then((addresses) async {
-                                    debugPrint('Addresses: $addresses');
-                                    debugPrint(' number of addresses: ${addresses.length}');
-                                    if (addresses.isNotEmpty) {
-                                      try {
-                                        Map<String, double> coordinates = await getCoordinates(addresses[0]);
-                                        debugPrint('Latitude: ${coordinates['latitude']}, Longitude: ${coordinates['longitude']}');
-                                        adresses = addresses;
-
-                                      } catch (error) {
-                                        // Gérez les erreurs, par exemple affichez un message d'erreur à l'utilisateur
-                                        debugPrint('Error getting coordinates: $error');
-                                      }
-                                    } else {
-                                      // Gérez le cas où aucune adresse n'a été trouvée
-                                      debugPrint('No addresses found');
+                                searchAddresses(value).then((addresses) async {
+                                  if (addresses.isNotEmpty) {
+                                    try {
+                                      setShouldHideSize(true);
+                                      setAddresses(addresses);
+                                      stopLoading();
+                                    } catch (error) {
+                                      setShouldHideSize(false);
+                                      debugPrint('Error getting coordinates: $error');
                                     }
-                                  }).catchError((error) {
-                                    // Gérez les erreurs, par exemple affichez un message d'erreur à l'utilisateur
-                                    debugPrint('Error searching addresses: $error');
-                                  });
-                                }
-                                // Traitez la saisie de l'utilisateur ici
+                                  } else {
+                                    debugPrint('No addresses found');
+                                    setAddresses(addresses);
+                                    stopLoading();
+                                    setShouldHideSize(false);
+                                  }
+                                }).catchError((error) {
+                                  setAddresses(null);
+                                  stopLoading();
+                                  setShouldHideSize(false);
+                                  debugPrint('Error searching addresses: $error');
+                                });
                               },
                             ),
                           ),
-
                         ],
                       ),
                     ),
                   ),
-                  if (adresses.isNotEmpty)
-                    IntrinsicHeight(
-                      child: Container(
-                        color: Colors.white,
-                        margin: const EdgeInsets.all(8.0),
-                        child: SingleChildScrollView(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: adresses
-                                  .map<Widget>((address) {
-                                // Extraire la partie souhaitée de l'adresse
-                                String formattedAddress = formatAddress(address);
-                                return ListTile(
-                                  title: Text(formattedAddress),
-                                  onTap: () async {
-                                    try {
-                                      Map<String, double> coordinates = await getCoordinates(address);
-                                      debugPrint('Latitude: ${coordinates['latitude']}, Longitude: ${coordinates['longitude']}');
-                                      // Mettez à jour l'interface utilisateur avec les coordonnées récupérées
-                                    } catch (error) {
-                                      // Gérez les erreurs de récupération des coordonnées
-                                      debugPrint('Error getting coordinates: $error');
-                                    }
-                                  },
-                                );
-                              }).toList(),
-                            ),
+                  isLoading
+                      ?
+                  loaderInSizedBox()
+                      : addressesModel.isNotEmpty
+                      ? IntrinsicHeight(
+                    child: Container(
+                      color: Colors.white,
+                      margin: const EdgeInsets.all(8.0),
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: addressesModel.map<Widget>((address) {
+                              String formattedAddress = formatAddress(address);
+                              return ListTile(
+                                title: Text(formattedAddress),
+                                onTap: () async {
+                                  try {
+                                    debugPrint('Getting coordinates for address: $address');
+                                    Map<String, double> coordinates = await getCoordinates(address);
+                                    LatLng newPoint = LatLng(coordinates['latitude']!, coordinates['longitude']!);
+                                    addMarker(newPoint);
+                                    moveCamera(newPoint);
+                                  } catch (error) {
+                                    debugPrint('Error getting coordinates: $error');
+                                  }
+                                },
+                              );
+                            }).toList(),
                           ),
                         ),
                       ),
                     ),
-
+                  )
+                      : hideSizedBox(shouldHideSize),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
                     child: SizedBox(
@@ -251,16 +269,16 @@ class MobileView {
                             padding: const EdgeInsets.all(8.0),
                             child: GestureDetector(
                               onTap: () {
-                                  if (selectedIndices.contains(index)) {
-                                    selectedIndices.remove(index);
-                                  } else {
-                                    selectedIndices.add(index);
-                                  }
-                                  updateMarkers(selectedIndices);
-                                },
+                                if (selectedIndices.contains(index)) {
+                                  selectedIndices.remove(index);
+                                } else {
+                                  selectedIndices.add(index);
+                                }
+                                updateMarkersTag(selectedIndices);
+                              },
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: selectedIndices.contains(index) ? const Color(0XFF102a5b) : Colors.white,
+                                  color: selectedIndices.contains(index) ? global.secondary : Colors.white,
                                   borderRadius: BorderRadius.circular(15),
                                 ),
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -269,7 +287,7 @@ class MobileView {
                                   children: [
                                     Icon(
                                       incidentType.icon,
-                                      color: selectedIndices.contains(index) ? Colors.white : const Color(0XFF102a5b),
+                                      color: selectedIndices.contains(index) ? Colors.white : global.secondary,
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
@@ -286,12 +304,34 @@ class MobileView {
                     ),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         );
       },
     );
   }
-}
 
+  loaderInSizedBox() {
+    return const SizedBox(
+      height: 100,
+      child: Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
+
+  Widget hideSizedBox(bool shouldHide) {
+    return shouldHide
+        ? const SizedBox()
+        : const SizedBox(
+      height: 100,
+      child: Center(
+        child: Text(
+          'Aucun résultat trouvé',
+          style: TextStyle(color: Colors.grey),
+        ),
+      ),
+    );
+  }
+}
