@@ -191,6 +191,7 @@ class MobileView {
                                 border: InputBorder.none,
                               ),
                               onSubmitted: (value) {
+
                                 searchAddresses(value).then((addresses) async {
                                   if (addresses.isNotEmpty) {
                                     try {
@@ -222,7 +223,11 @@ class MobileView {
                   ),
                   isLoading
                       ?
-                  loaderInSizedBox()
+                  Container(
+                      color: Colors.white,
+                      margin: const EdgeInsets.all(8.0),
+                      child :loaderInSizedBox()
+                  )
                       : addressesModel.isNotEmpty
                       ? IntrinsicHeight(
                     child: Container(
@@ -255,7 +260,9 @@ class MobileView {
                       ),
                     ),
                   )
-                      : hideSizedBox(shouldHideSize),
+                      :
+                  hideSizedBox(shouldHideSize),
+
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
                     child: SizedBox(
@@ -323,15 +330,24 @@ class MobileView {
 
   Widget hideSizedBox(bool shouldHide) {
     return shouldHide
-        ? const SizedBox()
-        : const SizedBox(
-      height: 100,
-      child: Center(
-        child: Text(
-          'Aucun résultat trouvé',
-          style: TextStyle(color: Colors.grey),
-        ),
-      ),
+        ? Container(
+        color: Colors.white,
+        margin: const EdgeInsets.all(8.0),
+        child : const SizedBox()
+    )
+
+        : Container(
+        color: Colors.white,
+        margin: const EdgeInsets.all(8.0),
+        child : const SizedBox(
+          height: 100,
+          child: Center(
+            child: Text(
+              'Aucun résultat trouvé',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+        )
     );
   }
 }
