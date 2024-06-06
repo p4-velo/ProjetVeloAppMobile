@@ -92,13 +92,14 @@ class MapState extends State<Home> {
   @override
   void initState() {
     startLoadingPage();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _requestLocationPermission();
-
-      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      debugPrint('Position: $position');
-
-    });    incidents = generateRandomIncidents(30);
+    // WidgetsBinding.instance.addPostFrameCallback((_) async {
+    //   await _requestLocationPermission();
+    //
+    //   Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    //   debugPrint('Position: $position');
+    //
+    // });
+    incidents = generateRandomIncidents(30);
     markers = filterIncidentsBySelectedTypes(incidents)
         .map<Marker>(
           (incident) => Marker(
@@ -141,7 +142,7 @@ class MapState extends State<Home> {
       mapController: _mapController,
       addMarker: addMarker,
       dangerTypes: _dangerTypes,
-      addCustomMarkerCallback: addCustomMarker
+      addCustomMarkerCallback: addCustomMarker,
       fetchRoute: _fetchRoute,
       routePoints: routePoints,
       getUserCurrentAddress: _getUserCurrentAddress,

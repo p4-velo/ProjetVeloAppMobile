@@ -60,15 +60,11 @@ class MobileView {
     required this.isLoadingPage,
     required this.mapController,
     required this.addMarker,
-<<<<<<< HEAD
-    
     required this.dangerTypes,
     required this.addCustomMarkerCallback,
-=======
     required this.fetchRoute,
     required this.routePoints,
     required this.getUserCurrentAddress,
->>>>>>> 6a54a96ac7f99278af654bef94409413a3f6dacc
   });
 
   final TextStyle selectedTextStyle = const TextStyle(
@@ -369,13 +365,13 @@ class MobileView {
                                     addMarker(newPoint);
                                     moveCamera(newPoint);
                                     // lancer la recherche de l'itinéraire
-                                    String userCurrentAddress = await getUserCurrentAddress();
-                                    List<Location> locations = await locationFromAddress(userCurrentAddress);
-                                    Location userCurrentLocation = locations[0];
+                                    // String userCurrentAddress = await getUserCurrentAddress();
+                                    // List<Location> locations = await locationFromAddress(userCurrentAddress);
+                                    // Location userCurrentLocation = locations[0];
 
-                                    fetchRoute(LatLng(userCurrentLocation.latitude, userCurrentLocation.longitude), LatLng(coordinates['latitude']!, coordinates['longitude']!));
+                                    // fetchRoute(LatLng(userCurrentLocation.latitude, userCurrentLocation.longitude), LatLng(coordinates['latitude']!, coordinates['longitude']!));
 
-                                    // fetchRoute(points[0],LatLng(coordinates['latitude']!, coordinates['longitude']!));
+                                    fetchRoute(points[0],LatLng(coordinates['latitude']!, coordinates['longitude']!));
                                   } catch (error) {
                                     debugPrint('Error getting coordinates: $error');
                                   }
