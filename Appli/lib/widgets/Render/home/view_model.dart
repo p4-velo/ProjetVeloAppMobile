@@ -12,6 +12,10 @@ import 'view.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:skeletton_projet_velo/global.dart' as global;
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -40,6 +44,9 @@ class MapState extends State<Home> {
   List<String> addresses = [];
   bool shouldHideSize = true;
   late int nbSelectedIndices;
+
+  List<LatLng> routePoints = [];
+
 
   void startLoading() async {
     setState(() {
@@ -85,7 +92,13 @@ class MapState extends State<Home> {
   @override
   void initState() {
     startLoadingPage();
-    incidents = generateRandomIncidents(30);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _requestLocationPermission();
+
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      debugPrint('Position: $position');
+
+    });    incidents = generateRandomIncidents(30);
     markers = filterIncidentsBySelectedTypes(incidents)
         .map<Marker>(
           (incident) => Marker(
@@ -127,9 +140,11 @@ class MapState extends State<Home> {
       isLoadingPage: isLoadingPage,
       mapController: _mapController,
       addMarker: addMarker,
-
       dangerTypes: _dangerTypes,
       addCustomMarkerCallback: addCustomMarker
+      fetchRoute: _fetchRoute,
+      routePoints: routePoints,
+      getUserCurrentAddress: _getUserCurrentAddress,
     );
     return currentView.render();
   }
@@ -203,6 +218,7 @@ class MapState extends State<Home> {
     List<Marker> newMarkers =List.from(markers);
     newMarkers.add(marker);
     updateMarker(newMarkers);
+    setAddresses([]);
   }
 
   void updateMarkerTag(List<int> selectedIndices) {
@@ -336,4 +352,42 @@ class MapState extends State<Home> {
 
     return formattedAddress;
   }
+
+  Future<void> _fetchRoute(LatLng startRoute, LatLng endRoute ) async {
+    final String url = 'http://router.project-osrm.org/route/v1/bike/${startRoute.longitude},${startRoute.latitude};${endRoute.longitude},${endRoute.latitude}?geometries=geojson';
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final List<dynamic> coordinates = data['routes'][0]['geometry']['coordinates'];
+      setState(() {
+        routePoints = coordinates.map((point) => LatLng(point[1], point[0])).toList();
+      });
+    } else {
+      print('Failed to load route');
+    }
+  }
+
+  Future<String> _getUserCurrentAddress() async {
+    // Récupérer la position actuelle de l'utilisateur
+    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+
+    // Convertir la position en une adresse lisible
+    List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+    Placemark placemark = placemarks[0];
+
+    // Retourner l'adresse complète
+    return '${placemark.thoroughfare}, ${placemark.subLocality}, ${placemark.locality}, ${placemark.administrativeArea}, ${placemark.postalCode}, ${placemark.country}';
+  }
+
+  Future<void> _requestLocationPermission() async {
+    // Demander l'autorisation d'accès à la position
+    PermissionStatus permission = await Permission.location.request();
+
+    if (permission != PermissionStatus.granted) {
+      // L'utilisateur a refusé l'autorisation d'accès à la position
+      print('Error getting coordinates: User denied permissions to access the device\'s location.');
+    }
+  }
+
+
 }

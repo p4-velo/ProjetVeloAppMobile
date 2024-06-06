@@ -1,8 +1,9 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:open_street_map_search_and_pick/open_street_map_search_and_pick.dart';
 import 'package:skeletton_projet_velo/global.dart' as global;
 import 'package:skeletton_projet_velo/widgets/CustomWidget/CustomLoader/view_model.dart';
 import '../../../POO/IncidentType.dart';
@@ -30,6 +31,9 @@ class MobileView {
   bool isLoadingPage;
   MapController mapController;
   Function addMarker;
+  Function fetchRoute;
+  List<LatLng> routePoints;
+  Function getUserCurrentAddress;
 
   List<DangerType> dangerTypes;
   Function addCustomMarkerCallback;
@@ -56,9 +60,15 @@ class MobileView {
     required this.isLoadingPage,
     required this.mapController,
     required this.addMarker,
+<<<<<<< HEAD
     
     required this.dangerTypes,
     required this.addCustomMarkerCallback,
+=======
+    required this.fetchRoute,
+    required this.routePoints,
+    required this.getUserCurrentAddress,
+>>>>>>> 6a54a96ac7f99278af654bef94409413a3f6dacc
   });
 
   final TextStyle selectedTextStyle = const TextStyle(
@@ -253,6 +263,17 @@ class MobileView {
                         },
                       ),
                     ),
+                    PolylineLayer(
+                      polylines: [
+                        Polyline(
+                          points: routePoints,
+                          strokeWidth: 4.0,
+                          color: Colors.blue,
+                        ),
+                      ],
+                    ),
+
+
                   ],
                 ),
               ),
@@ -347,6 +368,14 @@ class MobileView {
                                     LatLng newPoint = LatLng(coordinates['latitude']!, coordinates['longitude']!);
                                     addMarker(newPoint);
                                     moveCamera(newPoint);
+                                    // lancer la recherche de l'itinéraire
+                                    String userCurrentAddress = await getUserCurrentAddress();
+                                    List<Location> locations = await locationFromAddress(userCurrentAddress);
+                                    Location userCurrentLocation = locations[0];
+
+                                    fetchRoute(LatLng(userCurrentLocation.latitude, userCurrentLocation.longitude), LatLng(coordinates['latitude']!, coordinates['longitude']!));
+
+                                    // fetchRoute(points[0],LatLng(coordinates['latitude']!, coordinates['longitude']!));
                                   } catch (error) {
                                     debugPrint('Error getting coordinates: $error');
                                   }
@@ -448,4 +477,7 @@ class MobileView {
         )
     );
   }
+
+
+
 }
