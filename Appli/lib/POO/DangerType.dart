@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 
-class IncidentType {
+class DangerType {
   final String name;
   final IconData icon;
 
-  IncidentType({required this.name, required this.icon});
+  DangerType({required this.name, required this.icon});
 }

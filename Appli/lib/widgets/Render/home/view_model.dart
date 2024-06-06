@@ -6,6 +6,8 @@ import 'package:latlong2/latlong.dart';
 import '../../../POO/Incident.dart';
 import '../../../POO/IncidentType.dart';
 import '../../../POO/Localisation.dart';
+import '../../../POO/Danger.dart';
+import '../../../POO/DangerType.dart';
 import 'view.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -27,6 +29,9 @@ class MapState extends State<Home> {
   final MapController _mapController = MapController();
   late List<Incident> incidents;
   late List<Marker> markers;
+
+  late List<Danger> dangers = [];
+
   late int pointIndex;
   List<LatLng> points = [
     const LatLng(47.322, 5.041),
@@ -95,6 +100,8 @@ class MapState extends State<Home> {
     updateMarkerTag(_selectedIndices);
     stopLoadingPage();
     super.initState();
+
+    addCustomMarker();
   }
 
   @override
@@ -120,6 +127,9 @@ class MapState extends State<Home> {
       isLoadingPage: isLoadingPage,
       mapController: _mapController,
       addMarker: addMarker,
+
+      dangerTypes: _dangerTypes,
+      addCustomMarkerCallback: addCustomMarker
     );
     return currentView.render();
   }
@@ -134,6 +144,7 @@ class MapState extends State<Home> {
 
     return LatLng(lat, lng);
   }
+  
 
   // Ajoutez cette fonction pour générer un type d'incident aléatoire
   IncidentType generateRandomIncidentType() {
@@ -213,12 +224,53 @@ class MapState extends State<Home> {
     updateMarker(listMarkers);
   }
 
+
+  void addCustomMarker() {
+    final random = Random();
+    final LatLng coordinates = LatLng(47.3000, 5.1005);
+    final Marker marker = Marker(
+      point: coordinates,
+      child: const Icon(
+        Icons.engineering,
+        color: Colors.red,
+      ),
+    );
+
+    final Danger newDanger = Danger(
+      id: dangers.length, // Par exemple, utilisez la longueur actuelle de la liste comme ID
+      dangerType: DangerType(name: 'Custom Danger', icon: Icons.location_on), // Vous pouvez personnaliser ces détails
+      localisation: Localisation(id: random.nextInt(100000), latitude: coordinates.latitude, longitude: coordinates.longitude),
+    );
+
+    setState(() {
+      markers.add(marker);
+      dangers.add(newDanger);
+    });
+    print("liste :");
+    printDangersList();
+  }
+
+  void printDangersList() {
+    for (var danger in dangers) {
+      print('Danger ID: ${danger.id}, Type: ${danger.dangerType.name}, Coordinates: (${danger.localisation.latitude}, ${danger.localisation.longitude})');
+    }
+  }
+
   final List<IncidentType> _incidentTypes = [
-    IncidentType(name: 'Travaux', icon: Icons.construction),
+    IncidentType(name: 'Travaux', icon: Icons.engineering),
     IncidentType(name: 'Incidents', icon: Icons.error_outline),
     IncidentType(name: 'Arceaux', icon: Icons.bike_scooter),
     IncidentType(name: 'DiviaPark', icon: Icons.local_parking),
   ];
+
+  final List<DangerType> _dangerTypes = [
+    DangerType(name: 'Travaux', icon: Icons.construction),
+    DangerType(name: 'Accident', icon: Icons.car_crash),
+    DangerType(name: 'Route inondée', icon: Icons.flood),
+    DangerType(name: 'Danger', icon: Icons.report),
+  ];
+
+
 
   final List<int> _selectedIndices = [];
 

@@ -6,6 +6,8 @@ import 'package:open_street_map_search_and_pick/open_street_map_search_and_pick.
 import 'package:skeletton_projet_velo/global.dart' as global;
 import 'package:skeletton_projet_velo/widgets/CustomWidget/CustomLoader/view_model.dart';
 import '../../../POO/IncidentType.dart';
+import '../../../POO/DangerType.dart';
+import 'view_model.dart';
 
 class MobileView {
   BuildContext context;
@@ -29,6 +31,9 @@ class MobileView {
   MapController mapController;
   Function addMarker;
 
+  List<DangerType> dangerTypes;
+  Function addCustomMarkerCallback;
+
 
   MobileView({
     required this.context,
@@ -51,6 +56,9 @@ class MobileView {
     required this.isLoadingPage,
     required this.mapController,
     required this.addMarker,
+    
+    required this.dangerTypes,
+    required this.addCustomMarkerCallback,
   });
 
   final TextStyle selectedTextStyle = const TextStyle(
@@ -82,13 +90,103 @@ class MobileView {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30.0),
               ),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text(
+                        'Signaler un incident',
+                        textAlign: TextAlign.center,
+                      ),
+                      content: SizedBox(
+                        width: 200,
+                        height: 250,
+                        child: GridView.count(
+                          crossAxisCount: 2,
+                          children: [
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                addCustomMarkerCallback();
+                                print("travaux");
+                              },
+                              child: Icon(
+                                Icons.engineering,
+                                color: global.secondary,
+                                size: 50,
+                              ),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                print("accident");
+                              },
+                              child: Icon(
+                                Icons.car_crash,
+                                color: global.secondary,
+                                size: 50,
+                              ),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                print("innondation");
+                              },
+                              child: Icon(
+                                Icons.flood,
+                                color: global.secondary,
+                                size: 50,
+                              ),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                print("danger");
+                              },
+                              child: Icon(
+                                Icons.report,
+                                color: global.secondary,
+                                size: 50,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      actions: <Widget>[
+                        Container(
+                          width: double.infinity,
+                          child: Row(
+                            children: <Widget>[
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text('Annuler'),
+                                ),
+                              ),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text('Signaler'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
               child: Icon(
                 Icons.warning,
                 color: global.primary,
                 size: 35,
               ),
-              onPressed: () {
-              },
             ),
           ),
           body: Stack(

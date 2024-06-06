@@ -39,6 +39,7 @@ dependencies:
   open_street_map_search_and_pick: ^0.1.1
   flutter_native_splash: ^2.4.0
   map_launcher: ^3.3.0
+  popover: ^0.2.8+2
 
 
 dev_dependencies:
