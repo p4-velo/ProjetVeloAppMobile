@@ -27,8 +27,6 @@ class Home extends StatefulWidget {
 }
 
 class MapState extends State<Home> {
-  bool isLoading = false;
-  bool isLoadingPage = false;
   final PopupController _popupController = PopupController();
   final MapController _mapController = MapController();
   late List<Incident> incidents;
@@ -47,43 +45,6 @@ class MapState extends State<Home> {
 
   List<LatLng> routePoints = [];
 
-
-  void startLoading() async {
-    setState(() {
-      isLoading = true;
-    });
-  }
-
-  void stopLoading() async {
-    setState(() {
-      isLoading = false;
-    });
-  }
-
-  void startLoadingPage() async {
-    setState(() {
-      isLoadingPage = true;
-    });
-  }
-
-  void stopLoadingPage() async {
-    setState(() {
-      isLoadingPage = false;
-    });
-  }
-
-  void setAddresses(List<String> addresses) {
-    setState(() {
-      this.addresses = addresses;
-    });
-  }
-
-  setShouldHideSize(bool value) {
-    setState(() {
-      shouldHideSize = value;
-    });
-  }
-
   @override
   void dispose() {
     super.dispose();
@@ -91,7 +52,6 @@ class MapState extends State<Home> {
 
   @override
   void initState() {
-    startLoadingPage();
     // WidgetsBinding.instance.addPostFrameCallback((_) async {
     //   await _requestLocationPermission();
     //
@@ -112,7 +72,6 @@ class MapState extends State<Home> {
     ).toList();
     selectAll();
     updateMarkerTag(_selectedIndices);
-    stopLoadingPage();
     super.initState();
 
     addCustomMarker();
@@ -122,23 +81,16 @@ class MapState extends State<Home> {
   Widget build(BuildContext context) {
     var currentView = MobileView(
       context: context,
-      isLoading: isLoading,
       popupcontroller: _popupController,
       markers: markers,
       points: points,
       incidentsTypes: _incidentTypes,
       selectedIndices: _selectedIndices,
-      updateMarkers: updateMarker,
       updateMarkersTag: updateMarkerTag,
       searchAddresses: searchAddresses,
       getCoordinates: getCoordinates,
       formatAddress: formatAddress,
-      stopLoading: stopLoading,
-      setAddresses: setAddresses,
       addressesModel: addresses,
-      shouldHideSize: shouldHideSize,
-      setShouldHideSize: setShouldHideSize,
-      isLoadingPage: isLoadingPage,
       mapController: _mapController,
       addMarker: addMarker,
       dangerTypes: _dangerTypes,
@@ -202,11 +154,7 @@ class MapState extends State<Home> {
     return filteredIncidents;
   }
 
-  void updateMarker( List<Marker> newMarkers) {
-    setState(() {
-      markers = newMarkers;
-    });
-  }
+
 
   void addMarker(LatLng point) {
     Marker marker = Marker(
@@ -218,8 +166,9 @@ class MapState extends State<Home> {
     );
     List<Marker> newMarkers =List.from(markers);
     newMarkers.add(marker);
-    updateMarker(newMarkers);
-    setAddresses([]);
+    setState(() {
+      markers = newMarkers;
+    });
   }
 
   void updateMarkerTag(List<int> selectedIndices) {
@@ -238,7 +187,9 @@ class MapState extends State<Home> {
         ),
       );
     }).toList();
-    updateMarker(listMarkers);
+    setState(() {
+      markers = listMarkers;
+    });
   }
 
 
@@ -312,7 +263,6 @@ class MapState extends State<Home> {
   }
 
   Future<List<String>> searchAddresses(String query) async {
-    startLoading();
     final response = await http.get(Uri.parse('https://nominatim.openstreetmap.org/search?q=$query&countrycodes=fr&format=json'));
 
     if (response.statusCode == 200) {

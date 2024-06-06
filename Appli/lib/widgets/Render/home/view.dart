@@ -12,23 +12,16 @@ import 'view_model.dart';
 
 class MobileView {
   BuildContext context;
-  bool isLoading;
   PopupController popupcontroller;
   List<Marker> markers;
   List<LatLng> points;
   List<IncidentType> incidentsTypes;
   List<int> selectedIndices;
-  Function updateMarkers;
   Function updateMarkersTag;
   Function searchAddresses;
   Function getCoordinates;
   Function formatAddress;
-  Function stopLoading;
-  Function setAddresses;
   List<String> addressesModel;
-  bool shouldHideSize;
-  Function setShouldHideSize;
-  bool isLoadingPage;
   MapController mapController;
   Function addMarker;
   Function fetchRoute;
@@ -38,26 +31,25 @@ class MobileView {
   List<DangerType> dangerTypes;
   Function addCustomMarkerCallback;
 
+  //fonction de classe
+  bool isLoadingPage = false;
+  bool isLoading = false;
+  bool shouldHideSize = true;
+
+
 
   MobileView({
     required this.context,
-    required this.isLoading,
     required this.popupcontroller,
     required this.markers,
     required this.points,
     required this.incidentsTypes,
     required this.selectedIndices,
-    required this.updateMarkers,
     required this.updateMarkersTag,
     required this.searchAddresses,
     required this.getCoordinates,
     required this.formatAddress,
-    required this.stopLoading,
-    required this.setAddresses,
     required this.addressesModel,
-    required this.shouldHideSize,
-    required this.setShouldHideSize,
-    required this.isLoadingPage,
     required this.mapController,
     required this.addMarker,
     required this.dangerTypes,
@@ -77,14 +69,18 @@ class MobileView {
     fontWeight: FontWeight.bold,
   );
 
+  double getHeight(bool isInPopup) {
+    return isInPopup ? 100 : 200;
+  }
 
   void moveCamera(LatLng point) {
     mapController.move(point, 17);
   }
 
   render() {
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
+    return StatefulBuilder(
+      builder: (BuildContext context, StateSetter setState) {
+        isLoadingPage = false;
         return isLoadingPage
             ? const CustomLoader()
             : Scaffold(
@@ -97,96 +93,7 @@ class MobileView {
                 borderRadius: BorderRadius.circular(30.0),
               ),
               onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text(
-                        'Signaler un incident',
-                        textAlign: TextAlign.center,
-                      ),
-                      content: SizedBox(
-                        width: 200,
-                        height: 250,
-                        child: GridView.count(
-                          crossAxisCount: 2,
-                          children: [
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                addCustomMarkerCallback();
-                                print("travaux");
-                              },
-                              child: Icon(
-                                Icons.engineering,
-                                color: global.secondary,
-                                size: 50,
-                              ),
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                print("accident");
-                              },
-                              child: Icon(
-                                Icons.car_crash,
-                                color: global.secondary,
-                                size: 50,
-                              ),
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                print("innondation");
-                              },
-                              child: Icon(
-                                Icons.flood,
-                                color: global.secondary,
-                                size: 50,
-                              ),
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                print("danger");
-                              },
-                              child: Icon(
-                                Icons.report,
-                                color: global.secondary,
-                                size: 50,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      actions: <Widget>[
-                        Container(
-                          width: double.infinity,
-                          child: Row(
-                            children: <Widget>[
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: const Text('Annuler'),
-                                ),
-                              ),
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: const Text('Signaler'),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                );
+                showIncidentDialog(context);
               },
               child: Icon(
                 Icons.warning,
@@ -209,7 +116,9 @@ class MobileView {
                     onTap: (_, __) {
                       popupcontroller.hideAllPopups();
                       FocusScope.of(context).unfocus();
-                      setShouldHideSize(true);
+                      setState(() {
+                        shouldHideSize = true;
+                      });
                     },
                   ),
                   children: <Widget>[
@@ -243,7 +152,7 @@ class MobileView {
                             ),
                           ),
                         ),
-                        builder : (context, markers) {
+                        builder: (context, markers) {
                           return Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
@@ -268,8 +177,6 @@ class MobileView {
                         ),
                       ],
                     ),
-
-
                   ],
                 ),
               ),
@@ -306,27 +213,37 @@ class MobileView {
                                 border: InputBorder.none,
                               ),
                               onSubmitted: (value) {
-
+                                setState(() {
+                                  isLoading = true;
+                                });
                                 searchAddresses(value).then((addresses) async {
                                   if (addresses.isNotEmpty) {
                                     try {
-                                      setShouldHideSize(true);
-                                      setAddresses(addresses);
-                                      stopLoading();
+                                      setState(() {
+                                        shouldHideSize = true;
+                                        addressesModel = addresses;
+                                        isLoading = false;
+                                      });
                                     } catch (error) {
-                                      setShouldHideSize(false);
+                                      setState(() {
+                                        shouldHideSize = false;
+                                      });
                                       debugPrint('Error getting coordinates: $error');
                                     }
                                   } else {
                                     debugPrint('No addresses found');
-                                    setAddresses(addresses);
-                                    stopLoading();
-                                    setShouldHideSize(false);
+                                    setState(() {
+                                      addressesModel = addresses;
+                                      isLoading = false;
+                                      shouldHideSize = false;
+                                    });
                                   }
                                 }).catchError((error) {
-                                  setAddresses(null);
-                                  stopLoading();
-                                  setShouldHideSize(false);
+                                  setState(() {
+                                    addressesModel = [];
+                                    isLoading = false;
+                                    shouldHideSize = false;
+                                  });
                                   debugPrint('Error searching addresses: $error');
                                 });
                               },
@@ -337,11 +254,10 @@ class MobileView {
                     ),
                   ),
                   isLoading
-                      ?
-                  Container(
-                      color: Colors.white,
-                      margin: const EdgeInsets.all(8.0),
-                      child :loaderInSizedBox()
+                      ? Container(
+                    color: Colors.white,
+                    margin: const EdgeInsets.all(8.0),
+                    child: loaderInSizedBox(),
                   )
                       : addressesModel.isNotEmpty
                       ? IntrinsicHeight(
@@ -359,19 +275,19 @@ class MobileView {
                                 title: Text(formattedAddress),
                                 onTap: () async {
                                   try {
-                                    debugPrint('Getting coordinates for address: $address');
-                                    Map<String, double> coordinates = await getCoordinates(address);
-                                    LatLng newPoint = LatLng(coordinates['latitude']!, coordinates['longitude']!);
-                                    addMarker(newPoint);
-                                    moveCamera(newPoint);
-                                    // lancer la recherche de l'itinéraire
-                                    // String userCurrentAddress = await getUserCurrentAddress();
-                                    // List<Location> locations = await locationFromAddress(userCurrentAddress);
-                                    // Location userCurrentLocation = locations[0];
+                                    showPopupWithSimpleRadioChoose(context);
 
-                                    // fetchRoute(LatLng(userCurrentLocation.latitude, userCurrentLocation.longitude), LatLng(coordinates['latitude']!, coordinates['longitude']!));
-
-                                    fetchRoute(points[0],LatLng(coordinates['latitude']!, coordinates['longitude']!));
+                                    // debugPrint('Getting coordinates for address: $address');
+                                    // Map<String, double> coordinates = await getCoordinates(address);
+                                    // LatLng newPoint = LatLng(coordinates['latitude']!, coordinates['longitude']!);
+                                    // setState(() {
+                                    //   markers.add(Marker(
+                                    //     point: newPoint,
+                                    //     child :Icon(Icons.location_on),
+                                    //   ));
+                                    //   mapController.move(newPoint, 14.0);
+                                    // });
+                                    // fetchRoute(points[0], LatLng(coordinates['latitude']!, coordinates['longitude']!));
                                   } catch (error) {
                                     debugPrint('Error getting coordinates: $error');
                                   }
@@ -383,9 +299,7 @@ class MobileView {
                       ),
                     ),
                   )
-                      :
-                  hideSizedBox(shouldHideSize),
-
+                      : hideSizedBox(shouldHideSize),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
                     child: SizedBox(
@@ -399,12 +313,14 @@ class MobileView {
                             padding: const EdgeInsets.all(8.0),
                             child: GestureDetector(
                               onTap: () {
-                                if (selectedIndices.contains(index)) {
-                                  selectedIndices.remove(index);
-                                } else {
-                                  selectedIndices.add(index);
-                                }
-                                updateMarkersTag(selectedIndices);
+                                setState(() {
+                                  if (selectedIndices.contains(index)) {
+                                    selectedIndices.remove(index);
+                                  } else {
+                                    selectedIndices.add(index);
+                                  }
+                                  updateMarkersTag(selectedIndices);
+                                });
                               },
                               child: Container(
                                 decoration: BoxDecoration(
@@ -440,40 +356,450 @@ class MobileView {
         );
       },
     );
+
   }
 
-  loaderInSizedBox() {
-    return const SizedBox(
-      height: 100,
-      child: Center(
+  loaderInSizedBox({double size = 100}) {
+    return  SizedBox(
+      height: size,
+      width: size,
+      child: const Center(
         child: CircularProgressIndicator(),
       ),
     );
   }
 
-  Widget hideSizedBox(bool shouldHide) {
-    return shouldHide
+  Widget hideSizedBox(bool shouldHideSize, { bool isInPopup = false}) {
+    debugPrint('shouldHideSize: $shouldHideSize');
+    return shouldHideSize
         ? Container(
-        color: Colors.white,
-        margin: const EdgeInsets.all(8.0),
+        color: isInPopup ?  Colors.transparent: Colors.white,
+        margin: isInPopup ? const EdgeInsets.all(0) : const EdgeInsets.all(8.0),
         child : const SizedBox()
     )
 
         : Container(
-        color: Colors.white,
-        margin: const EdgeInsets.all(8.0),
-        child : const SizedBox(
-          height: 100,
-          child: Center(
-            child: Text(
-              'Aucun résultat trouvé',
-              style: TextStyle(color: Colors.grey),
+      color: isInPopup ? Colors.transparent : Colors.white,
+      margin: isInPopup ? const EdgeInsets.all(0) : const EdgeInsets.all(8.0),
+      child: SizedBox(
+        height: isInPopup ? 50 : 100,
+        child: const Center(
+          child: Text(
+            'Aucun résultat trouvé',
+            style: TextStyle(color: Colors.grey),
+          ),
+        ),
+      ),
+    );
+
+  }
+  void showIncidentDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Signaler un incident',
+            textAlign: TextAlign.center,
+          ),
+          content: SizedBox(
+            width: 200,
+            height: 250,
+            child: GridView.count(
+              crossAxisCount: 2,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    addCustomMarkerCallback();
+                    print("travaux");
+                  },
+                  child: Icon(
+                    Icons.engineering,
+                    color: global.secondary,
+                    size: 50,
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    print("accident");
+                  },
+                  child: Icon(
+                    Icons.car_crash,
+                    color: global.secondary,
+                    size: 50,
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    print("innondation");
+                  },
+                  child: Icon(
+                    Icons.flood,
+                    color: global.secondary,
+                    size: 50,
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    print("danger");
+                  },
+                  child: Icon(
+                    Icons.report,
+                    color: global.secondary,
+                    size: 50,
+                  ),
+                ),
+              ],
             ),
           ),
-        )
+          actions: <Widget>[
+            Container(
+              width: double.infinity,
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Annuler'),
+                    ),
+                  ),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Signaler'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
 
+  void showChooseStartLocation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            int selectedOption = 0;
+            TextEditingController addressController = TextEditingController();
+            String? _selectedFavoriteAddress;
+            List<String> _favoriteAddresses = ['Adresse 1', 'Adresse 2', 'Adresse 3'];
 
+            return AlertDialog(
+              title: const Text(
+                'Choisissez le départ:',
+                textAlign: TextAlign.center,
+              ),
+              content: SizedBox(
+                width: 200,
+                height: 300,
+                child: Column(
+                  children: [
+                    RadioListTile<int>(
+                      title: Text('Ma localisation'),
+                      value: 0,
+                      groupValue: selectedOption,
+                      onChanged: (int? value) {
+                        setState(() {
+                          selectedOption = value!;
+                        });
+                      },
+                    ),
+                    ListTile(
+                      leading: Radio<int>(
+                        value: 1,
+                        groupValue: selectedOption,
+                        onChanged: (int? value) {
+                          setState(() {
+                            selectedOption = value!;
+                          });
+                        },
+                      ),
+                      title: TextField(
+                        controller: addressController,
+                        decoration: InputDecoration(
+                          labelText: 'Entrer une adresse',
+                          enabled: selectedOption == 1,
+                        ),
+                        enabled: selectedOption == 1,
+                      ),
+                      onTap: () {
+                        setState(() {
+                          selectedOption = 1;
+                        });
+                      },
+                    ),
+                    ListTile(
+                      leading: Radio<int>(
+                        value: 2,
+                        groupValue: selectedOption,
+                        onChanged: (int? value) {
+                          setState(() {
+                            selectedOption = value!;
+                          });
+                        },
+                      ),
+                      title: DropdownButton<String>(
+                        value: _selectedFavoriteAddress,
+                        items: _favoriteAddresses.map((String address) {
+                          return DropdownMenuItem<String>(
+                            value: address,
+                            child: Text(address),
+                          );
+                        }).toList(),
+                        onChanged: selectedOption == 2
+                            ? (String? newValue) {
+                          setState(() {
+                            _selectedFavoriteAddress = newValue!;
+                          });
+                        }
+                            : null,
+                        hint: Text('Mes adresses favoris'),
+                      ),
+                      onTap: () {
+                        setState(() {
+                          selectedOption = 2;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                Container(
+                  width: double.infinity,
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text('Annuler'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void showPopupWithSimpleRadioChoose(BuildContext context) {
+    int? selectedOption; // Variable pour stocker la valeur sélectionnée
+    String address = '';
+    bool isLoadingPopUp = false;
+    String inputText = '';
+    String? selectedFavoriteAddress;
+    List<String> favoriteAddresses = ['Adresse 1', 'Adresse 2', 'Adresse 3'];
+
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text(
+                'Choisissez l\'adresse de départ:',
+                textAlign: TextAlign.center,
+              ),
+              content: SizedBox(
+                width: 400,
+                height: 350,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    RadioListTile<int>(
+                      title: const Text('Ma localisation'), // Texte de la première option
+                      value: 1, // Valeur associée à la première option
+                      groupValue: selectedOption,
+                      onChanged: (int? value) {
+                        setState(() {
+                          selectedOption = value;
+                        });
+                      },
+                    ),
+                    RadioListTile<int>(
+                        title: TextField(
+                          controller: TextEditingController(
+                            text: inputText.isNotEmpty ? inputText : null,
+                          ),
+                          style: TextStyle(
+                            // Utilisez une expression conditionnelle pour définir la couleur du texte
+                            // Si inputText est non vide, le texte sera noir, sinon il sera gris
+                            // Vous pouvez ajuster les couleurs selon vos préférences
+                            color: inputText.isNotEmpty ? Colors.green : Colors.black,
+                          ),
+                          decoration: const InputDecoration(
+                            hintText: 'Recherchez une adresse',
+                            hintStyle: TextStyle(
+                              color: Colors.grey,
+                            ),
+                            border: InputBorder.none,
+                          ),
+                          onSubmitted: (value) {
+                            setState(() {
+                              isLoadingPopUp = true;
+                            });
+                            searchAddresses(value).then((addresses) async {
+                              if (addresses.isNotEmpty) {
+                                try {
+                                  setState(() {
+                                    address = addresses[0];
+                                    shouldHideSize = true;
+                                    isLoadingPopUp = false;
+                                  });
+                                } catch (error) {
+                                  setState(() {
+                                    address = '';
+                                    shouldHideSize = false;
+                                    isLoadingPopUp = false;
+                                  });
+                                  debugPrint('Error getting coordinates: $error');
+                                }
+                              } else {
+                                debugPrint('No addresses found');
+                                setState(() {
+                                  address = '';
+                                  shouldHideSize = false;
+                                  isLoadingPopUp = false;
+                                });
+                              }
+                            }).catchError((error) {
+                              setState(() {
+                                address = '';
+                                shouldHideSize = false;
+                                isLoadingPopUp = false;
+                              });
+                              debugPrint('Error searching addresses: $error');
+                            });
+                          },
+                        ),
+                        value: 2,
+                        groupValue: selectedOption,
+                        onChanged: (int? value) {
+                          setState(() {
+                            selectedOption = value;
+                          });
+                        },
+                      ),
+                    isLoadingPopUp ?
+                    Container(
+                      color: Colors.transparent,
+                      child :loaderInSizedBox(size: 20)
+                    ) :
+                    address.isNotEmpty ? IntrinsicHeight(
+                      child: Container(
+                        color: Colors.transparent,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Utiliser une variable pour le formattedAddress
+                              Builder(
+                                builder: (context) {
+
+                                  String formattedAddress = formatAddress(address);
+                                  return ListTile(
+                                    title: Text(formattedAddress),
+                                    onTap: () async {
+                                      try {
+                                        setState(() {
+                                          inputText = formattedAddress;
+                                          address = '';
+                                        });
+                                        debugPrint('Getting coordinates for address: $address');
+                                        Map<String, double> coordinates = await getCoordinates(address);
+                                        LatLng newPoint = LatLng(coordinates['latitude']!, coordinates['longitude']!);
+
+                                      } catch (error) {
+                                        debugPrint('Error getting coordinates: $error');
+                                      }
+                                    },
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                : hideSizedBox(shouldHideSize, isInPopup: true),
+                     // hideSizedBox(shouldHideSize, isInPopup: true),
+                    RadioListTile<int>(
+                      title: DropdownButton<String>(
+                        value: selectedFavoriteAddress,
+                        items: favoriteAddresses.map((String address) {
+                          return DropdownMenuItem<String>(
+                            value: address,
+                            child: Text(address),
+                          );
+                        }).toList(),
+                        onChanged: selectedOption == 3
+                            ? (String? newValue) {
+                          setState(() {
+                            selectedFavoriteAddress = newValue!;
+                          });
+                        }
+                            : null,
+                        hint: const Text('Mes favoris'),
+                      ),
+                      value: 3,
+                      groupValue: selectedOption,
+                      onChanged: (int? value) {
+                        setState(() {
+                          selectedOption = value!;
+                        });
+                      },
+                    )
+
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Fermer la boîte de dialogue
+                    // Faites quelque chose avec la valeur sélectionnée, si nécessaire
+                    if (selectedOption != null) {
+                      switch (selectedOption) {
+                        case 1:
+                          print('Option 1 selected');
+                          break;
+                        case 2:
+                          print('Option 2 selected');
+                          break;
+                        case 3:
+                          print('Option 3 selected');
+                          break;
+                      }
+                    }
+                  },
+                  child: const Text('Choisir'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 }
