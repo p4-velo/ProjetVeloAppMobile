@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:skeletton_projet_velo/global.dart' as global;
 import 'package:skeletton_projet_velo/widgets/CustomWidget/CustomLoader/view_model.dart';
 import '../../../POO/IncidentType.dart';
@@ -772,7 +774,9 @@ class MobileView {
                     if (selectedOption != null) {
                       switch (selectedOption) {
                         case 1:
-                          // ask permission of user's localisation
+                          checkPermission(Permission.location, context);
+                          //recupérer la localisation de l'utilisateur
+                          // fetchRoute(LatLng(0, 0), endPoint);
                           debugPrint('Start with my localisation');
                           break;
                         case 2:
@@ -797,3 +801,27 @@ class MobileView {
     );
   }
 }
+
+Future<void> checkPermission(Permission permission, BuildContext context) async {
+  final status = await permission.request();
+  if (status.isGranted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Permission Granted'),
+      ),
+    );
+  } else if (status.isDenied) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Permission Denied'),
+      ),
+    );
+  } else if (status.isPermanentlyDenied) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Permission Permanently Denied'),
+      ),
+    );
+  }
+}
+

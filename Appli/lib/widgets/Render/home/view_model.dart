@@ -45,6 +45,8 @@ class MapState extends State<Home> {
   late int nbSelectedIndices;
 
   List<LatLng> routePoints = [];
+  Map<Permission, PermissionStatus> _permissionStatus = {};
+
 
   @override
   void dispose() {
@@ -62,6 +64,13 @@ class MapState extends State<Home> {
     //   debugPrint('Position: $position');
     //
     // });
+    debugPrint('Init state');
+    _getPermissionStatus();
+    debugPrint(_getUserCurrentAddress().toString());
+    _getCurrentLocation();
+    debugPrint('Current location: ${_getUserCurrentAddress()}');
+
+
     incidents = generateRandomIncidents(30);
     markers = filterIncidentsBySelectedTypes(incidents)
         .map<Marker>(
@@ -334,7 +343,7 @@ class MapState extends State<Home> {
     for (var point in routePoints) {
       if (!isNavigating) break;
       _mapController.move(point, 18.0);
-      await Future.delayed(Duration(seconds: 2));
+      // await Future.delayed(Duration(seconds: 2));
     }
   }
 
@@ -350,15 +359,28 @@ class MapState extends State<Home> {
     return '${placemark.thoroughfare}, ${placemark.subLocality}, ${placemark.locality}, ${placemark.administrativeArea}, ${placemark.postalCode}, ${placemark.country}';
   }
 
-  Future<void> _requestLocationPermission() async {
-    // Demander l'autorisation d'accès à la position
-    PermissionStatus permission = await Permission.location.request();
 
-    if (permission != PermissionStatus.granted) {
-      // L'utilisateur a refusé l'autorisation d'accès à la position
-      print('Error getting coordinates: User denied permissions to access the device\'s location.');
-    }
+
+  Future<void> _getPermissionStatus() async {
+    Map<Permission, PermissionStatus> permissionStatus = await [
+      Permission.location,
+    ].request();
+    setState(() {
+      _permissionStatus = permissionStatus;
+    });
   }
 
+  Future<void> _getCurrentLocation() async {
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    LatLng currentPosition = LatLng(position.latitude, position.longitude);
+    debugPrint('Current position: $currentPosition');
+    _getUserCurrentAddress().then((address) {
+      debugPrint('Current address: $address');
+    });
+    _fetchRoute(currentPosition, points.first);
+  }
 
 }
