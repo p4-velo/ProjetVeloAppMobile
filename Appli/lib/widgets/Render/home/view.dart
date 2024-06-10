@@ -275,19 +275,11 @@ class MobileView {
                                 title: Text(formattedAddress),
                                 onTap: () async {
                                   try {
-                                    showPopupWithSimpleRadioChoose(context);
+                                    debugPrint('Getting coordinates for address: $address');
+                                    Map<String, double> coordinates = await getCoordinates(address);
+                                    LatLng endPoint = LatLng(coordinates['latitude']!, coordinates['longitude']!);
 
-                                    // debugPrint('Getting coordinates for address: $address');
-                                    // Map<String, double> coordinates = await getCoordinates(address);
-                                    // LatLng newPoint = LatLng(coordinates['latitude']!, coordinates['longitude']!);
-                                    // setState(() {
-                                    //   markers.add(Marker(
-                                    //     point: newPoint,
-                                    //     child :Icon(Icons.location_on),
-                                    //   ));
-                                    //   mapController.move(newPoint, 14.0);
-                                    // });
-                                    // fetchRoute(points[0], LatLng(coordinates['latitude']!, coordinates['longitude']!));
+                                    showPopupWithSimpleRadioChoose(context, endPoint);
                                   } catch (error) {
                                     debugPrint('Error getting coordinates: $error');
                                   }
@@ -602,11 +594,12 @@ class MobileView {
     );
   }
 
-  void showPopupWithSimpleRadioChoose(BuildContext context) {
+  void showPopupWithSimpleRadioChoose(BuildContext context, LatLng endPoint) {
     int? selectedOption; // Variable pour stocker la valeur sélectionnée
     String address = '';
     bool isLoadingPopUp = false;
     String inputText = '';
+    late String addressStartPoint;
     String? selectedFavoriteAddress;
     List<String> favoriteAddresses = ['Adresse 1', 'Adresse 2', 'Adresse 3'];
 
@@ -724,12 +717,9 @@ class MobileView {
                                       try {
                                         setState(() {
                                           inputText = formattedAddress;
+                                          addressStartPoint = address;
                                           address = '';
                                         });
-                                        debugPrint('Getting coordinates for address: $address');
-                                        Map<String, double> coordinates = await getCoordinates(address);
-                                        LatLng newPoint = LatLng(coordinates['latitude']!, coordinates['longitude']!);
-
                                       } catch (error) {
                                         debugPrint('Error getting coordinates: $error');
                                       }
@@ -776,17 +766,21 @@ class MobileView {
               ),
               actions: <Widget>[
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     Navigator.of(context).pop(); // Fermer la boîte de dialogue
                     // Faites quelque chose avec la valeur sélectionnée, si nécessaire
                     if (selectedOption != null) {
                       switch (selectedOption) {
                         case 1:
-                          print('Option 1 selected');
+                          // ask permission of user's localisation
+                          debugPrint('Start with my localisation');
                           break;
                         case 2:
-                          print('Option 2 selected');
-                          break;
+                          debugPrint('Start with address: $addressStartPoint');
+                          Map<String, double> coordinates = await getCoordinates(addressStartPoint);
+                          LatLng startPoint = LatLng(coordinates['latitude']!, coordinates['longitude']!);
+
+                          fetchRoute(startPoint, endPoint);
                         case 3:
                           print('Option 3 selected');
                           break;

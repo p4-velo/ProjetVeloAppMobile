@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:map_launcher/map_launcher.dart';
 import '../../../POO/Incident.dart';
 import '../../../POO/IncidentType.dart';
 import '../../../POO/Localisation.dart';
@@ -49,6 +50,8 @@ class MapState extends State<Home> {
   void dispose() {
     super.dispose();
   }
+
+  bool isNavigating = false;
 
   @override
   void initState() {
@@ -305,6 +308,7 @@ class MapState extends State<Home> {
   }
 
   Future<void> _fetchRoute(LatLng startRoute, LatLng endRoute ) async {
+    debugPrint('Fetching route from $startRoute to $endRoute');
     final String url = 'http://router.project-osrm.org/route/v1/bike/${startRoute.longitude},${startRoute.latitude};${endRoute.longitude},${endRoute.latitude}?geometries=geojson';
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
@@ -312,9 +316,25 @@ class MapState extends State<Home> {
       final List<dynamic> coordinates = data['routes'][0]['geometry']['coordinates'];
       setState(() {
         routePoints = coordinates.map((point) => LatLng(point[1], point[0])).toList();
+        addMarker(endRoute);
+
+        // _mapController.fitBounds(LatLngBounds.fromPoints([startRoute, endRoute]));   //zoom bon pour tout voir
+        // _mapController.moveAndRotate(startRoute, 18.0,0.0);
+        isNavigating = true;
+        _startNavigation();
+        //lancer la navigation
       });
+
     } else {
       print('Failed to load route');
+    }
+  }
+
+  void _startNavigation() async {
+    for (var point in routePoints) {
+      if (!isNavigating) break;
+      _mapController.move(point, 18.0);
+      await Future.delayed(Duration(seconds: 2));
     }
   }
 
