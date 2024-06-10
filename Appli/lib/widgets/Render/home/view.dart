@@ -28,7 +28,7 @@ class MobileView {
   Function addMarker;
   Function fetchRoute;
   List<LatLng> routePoints;
-  Function getUserCurrentAddress;
+  Function getCurrentLocation;
 
   List<DangerType> dangerTypes;
   Function addCustomMarkerCallback;
@@ -58,7 +58,7 @@ class MobileView {
     required this.addCustomMarkerCallback,
     required this.fetchRoute,
     required this.routePoints,
-    required this.getUserCurrentAddress,
+    required this.getCurrentLocation,
   });
 
   final TextStyle selectedTextStyle = const TextStyle(
@@ -775,8 +775,8 @@ class MobileView {
                       switch (selectedOption) {
                         case 1:
                           checkPermission(Permission.location, context);
-                          //recupérer la localisation de l'utilisateur
-                          // fetchRoute(LatLng(0, 0), endPoint);
+                          LatLng userLocation =  getCurrentLocation();
+                          fetchRoute(userLocation, endPoint);
                           debugPrint('Start with my localisation');
                           break;
                         case 2:

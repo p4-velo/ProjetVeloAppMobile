@@ -57,20 +57,8 @@ class MapState extends State<Home> {
 
   @override
   void initState() {
-    // WidgetsBinding.instance.addPostFrameCallback((_) async {
-    //   await _requestLocationPermission();
-    //
-    //   Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-    //   debugPrint('Position: $position');
-    //
-    // });
-    debugPrint('Init state');
+
     _getPermissionStatus();
-    debugPrint(_getUserCurrentAddress().toString());
-    _getCurrentLocation();
-    debugPrint('Current location: ${_getUserCurrentAddress()}');
-
-
     incidents = generateRandomIncidents(30);
     markers = filterIncidentsBySelectedTypes(incidents)
         .map<Marker>(
@@ -109,7 +97,7 @@ class MapState extends State<Home> {
       addCustomMarkerCallback: addCustomMarker,
       fetchRoute: _fetchRoute,
       routePoints: routePoints,
-      getUserCurrentAddress: _getUserCurrentAddress,
+      getCurrentLocation: _getCurrentLocation,
     );
     return currentView.render();
   }
@@ -370,17 +358,12 @@ class MapState extends State<Home> {
     });
   }
 
-  Future<void> _getCurrentLocation() async {
+  Future<LatLng> _getCurrentLocation() async {
     Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );
-
     LatLng currentPosition = LatLng(position.latitude, position.longitude);
-    debugPrint('Current position: $currentPosition');
-    _getUserCurrentAddress().then((address) {
-      debugPrint('Current address: $address');
-    });
-    _fetchRoute(currentPosition, points.first);
+    return currentPosition;
   }
 
 }
