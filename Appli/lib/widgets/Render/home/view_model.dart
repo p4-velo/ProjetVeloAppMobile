@@ -58,7 +58,7 @@ class MapState extends State<Home> {
   @override
   void initState() {
     _getPermissionStatus();
-    incidents = generateRandomIncidents(30);
+    incidents = generateRandomIncidents(0);
     markers = filterIncidentsBySelectedTypes(incidents)
         .map<Marker>(
           (incident) => Marker(
@@ -91,12 +91,13 @@ class MapState extends State<Home> {
       addMarker: addMarker,
       fetchRoute: _fetchRoute,
       routePoints: routePoints,
-      generateTest: generateTest,
-      createDanger: createDanger,
-      addMarkerTest: addMarkerTest,
+
       // addIncidentMarker: addIncidentMarker,
       getCurrentLocation: _getCurrentLocation,
       permissionStatus: _permissionStatus,
+      generateTest: generateTest,
+      createDanger: createDanger,
+      addMarkerTest: addMarkerTest,
     );
     return currentView.render();
   }
@@ -199,7 +200,9 @@ class MapState extends State<Home> {
         );
         List<Marker> newMarkers =List.from(markers);
         newMarkers.add(marker);
-        updateMarker(newMarkers);
+        setState(() {
+          markers = newMarkers;
+        });
         break;
 
       case 'accident':
@@ -223,7 +226,9 @@ class MapState extends State<Home> {
         );
         List<Marker> newMarkers =List.from(markers);
         newMarkers.add(marker);
-        updateMarker(newMarkers);
+        setState(() {
+          markers = newMarkers;
+        });
         break;
 
       case 'inondation':
@@ -247,7 +252,9 @@ class MapState extends State<Home> {
         );
         List<Marker> newMarkers =List.from(markers);
         newMarkers.add(marker);
-        updateMarker(newMarkers);
+        setState(() {
+          markers = newMarkers;
+        });
         break;
 
       case 'danger':
@@ -270,7 +277,9 @@ class MapState extends State<Home> {
         );
         List<Marker> newMarkers =List.from(markers);
         newMarkers.add(marker);
-        updateMarker(newMarkers);
+        setState(() {
+          markers = newMarkers;
+        });
         break;
 
       default:

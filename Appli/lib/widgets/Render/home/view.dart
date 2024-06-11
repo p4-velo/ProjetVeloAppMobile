@@ -1,4 +1,4 @@
-// import 'dart:nativewrappers/_internal/vm/lib/core_patch.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
@@ -11,7 +11,6 @@ import 'package:skeletton_projet_velo/widgets/CustomWidget/CustomLoader/view_mod
 import '../../../POO/IncidentType.dart';
 import '../../../POO/DangerType.dart';
 import 'view_model.dart';
-import 'dart:math';
 
 
 class MobileView {
@@ -29,21 +28,19 @@ class MobileView {
   MapController mapController;
   Function addMarker;
   Function fetchRoute;
+
   List<LatLng> routePoints;
   Function getCurrentLocation;
   Map<Permission, PermissionStatus> permissionStatus;
 
-
-  List<DangerType> dangerTypes;
-  Function addCustomMarkerCallback;
+  Function createDanger;
+  Function addMarkerTest;
+  Function generateTest;
 
   //fonction de classe
   bool isLoadingPage = false;
   bool isLoading = false;
   bool shouldHideSize = true;
-
-
-
 
 
   MobileView({
@@ -64,6 +61,9 @@ class MobileView {
     required this.routePoints,
     required this.getCurrentLocation,
     required this.permissionStatus,
+    required this.generateTest,
+    required this.createDanger,
+    required this.addMarkerTest,
   });
 
   final TextStyle selectedTextStyle = const TextStyle(
@@ -201,23 +201,20 @@ class MobileView {
                             margin: const EdgeInsets.only(right: 15, left: 4.0),
                             padding: const EdgeInsets.all(8.0),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: global.primary,
                               borderRadius: BorderRadius.circular(30),
                             ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  margin: const EdgeInsets.only(
-                                      right: 15, left: 4.0),
-                                  padding: const EdgeInsets.all(8.0),
-                                  decoration: BoxDecoration(
-                                    color: global.primary,
-                                    borderRadius: BorderRadius.circular(30),
-                                  ),
-                                  child: const Icon(
-                                    Icons.search,
-                                    color: Colors.white,
-                                  ),
+                            child: const Icon(
+                              Icons.search,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Expanded(
+                            child: TextField(
+                              decoration: const InputDecoration(
+                                hintText: 'Rechercher un lieu ',
+                                hintStyle: TextStyle(
+                                  color: Colors.grey,
                                 ),
                                 border: InputBorder.none,
                               ),
@@ -339,71 +336,25 @@ class MobileView {
                                       incidentType.icon,
                                       color: selectedIndices.contains(index) ? Colors.white : global.secondary,
                                     ),
-                                  )
-                                : hideSizedBox(shouldHideSize),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0, vertical: 8.0),
-                          child: SizedBox(
-                            height: 50,
-                            child: ListView.builder(
-                              itemCount: incidentsTypes.length,
-                              scrollDirection: Axis.horizontal,
-                              itemBuilder: (BuildContext context, int index) {
-                                final incidentType = incidentsTypes[index];
-                                return Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      if (selectedIndices.contains(index)) {
-                                        selectedIndices.remove(index);
-                                      } else {
-                                        selectedIndices.add(index);
-                                      }
-                                      updateMarkersTag(selectedIndices);
-                                    },
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: selectedIndices.contains(index)
-                                            ? global.secondary
-                                            : Colors.white,
-                                        borderRadius: BorderRadius.circular(15),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16, vertical: 8),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            incidentType.icon,
-                                            color:
-                                                selectedIndices.contains(index)
-                                                    ? Colors.white
-                                                    : global.secondary,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            incidentType.name,
-                                            style:
-                                                selectedIndices.contains(index)
-                                                    ? selectedTextStyle
-                                                    : unselectedTextStyle,
-                                          ),
-                                        ],
-                                      ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      incidentType.name,
+                                      style: selectedIndices.contains(index) ? selectedTextStyle : unselectedTextStyle,
                                     ),
-                                  ),
-                                );
-                              },
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                      ],
+                          );
+                        },
+                      ),
                     ),
-                  ],
-                ),
-              );
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
       },
     );
 
@@ -446,100 +397,173 @@ class MobileView {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text(
-            'Signaler un incident',
-            textAlign: TextAlign.center,
-          ),
-          content: SizedBox(
-            width: 200,
-            height: 250,
-            child: GridView.count(
-              crossAxisCount: 2,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    addCustomMarkerCallback();
-                    print("travaux");
-                  },
-                  child: Icon(
-                    Icons.engineering,
-                    color: global.secondary,
-                    size: 50,
-                  ),
+        String selectedButton = '';
+
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: const Text(
+                'Signaler un incident',
+                textAlign: TextAlign.center,
+              ),
+              content: SizedBox(
+                width: 200,
+                height: 250,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              selectedButton = 'travaux';
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            shape: const CircleBorder(),
+                            padding: const EdgeInsets.all(20),
+                            backgroundColor: selectedButton == 'travaux'
+                                ? Colors.grey
+                                : Colors.white,
+                          ),
+                          child: Icon(
+                            Icons.engineering,
+                            color: global.secondary,
+                            size: 70,
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              selectedButton = 'accident';
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            shape: const CircleBorder(),
+                            padding: const EdgeInsets.all(20),
+                            backgroundColor: selectedButton == 'accident'
+                                ? Colors.grey
+                                : Colors.white,
+                          ),
+                          child: Icon(
+                            Icons.car_crash,
+                            color: global.secondary,
+                            size: 70,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              selectedButton = 'inondation';
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            shape: const CircleBorder(),
+                            padding: const EdgeInsets.all(20),
+                            backgroundColor: selectedButton == 'inondation'
+                                ? Colors.grey
+                                : Colors.white,
+                          ),
+                          child: Icon(
+                            Icons.flood,
+                            color: global.secondary,
+                            size: 70,
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              selectedButton = 'danger';
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            shape: const CircleBorder(),
+                            padding: const EdgeInsets.all(20),
+                            backgroundColor: selectedButton == 'danger'
+                                ? Colors.grey
+                                : Colors.white,
+                          ),
+                          child: Icon(
+                            Icons.report,
+                            color: global.secondary,
+                            size: 70,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    print("accident");
-                  },
-                  child: Icon(
-                    Icons.car_crash,
-                    color: global.secondary,
-                    size: 50,
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    print("innondation");
-                  },
-                  child: Icon(
-                    Icons.flood,
-                    color: global.secondary,
-                    size: 50,
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    print("danger");
-                  },
-                  child: Icon(
-                    Icons.report,
-                    color: global.secondary,
-                    size: 50,
-                  ),
+              ),
+              actions: <Widget>[
+                Column(
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        if (selectedButton.isNotEmpty) {
+                          LatLng coordinates = generateTest();
+
+                          // ViewModel viewModel = ViewModel(
+                          //   mapController: mapController,
+                          //   markers: markers,
+                          // );
+                          //createDanger(selectedButton, coordinates);
+
+                          addMarkerTest(coordinates, selectedButton);
+
+                          // addMarker(coordinates);
+                          // addIncidentMarker(coordinates, selectedButton);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: global.secondary,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(double.infinity, 36),
+                          padding: const EdgeInsets.symmetric(vertical: 16)),
+                      child: const Text(
+                        'SIGNALER',
+                        style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: global.tertiary,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(double.infinity, 36),
+                          padding: const EdgeInsets.symmetric(vertical: 10)),
+                      child: const Text(
+                        'ANNULER',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ),
-          actions: <Widget>[
-            Container(
-              width: double.infinity,
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text('Annuler'),
-                    ),
-                  ),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text('Signaler'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            );
+          },
         );
       },
     );
   }
 
-  void showIncidentDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        String selectedButton = '';
 
   void showChooseStartLocation(BuildContext context) {
     showDialog(
@@ -698,75 +722,75 @@ class MobileView {
                       },
                     ),
                     RadioListTile<int>(
-                        title: TextField(
-                          maxLines: 2,
-                          textInputAction: TextInputAction.search,
-                          controller: TextEditingController(
-                            text: inputText.isNotEmpty ? inputText : null,
+                      title: TextField(
+                        maxLines: 2,
+                        textInputAction: TextInputAction.search,
+                        controller: TextEditingController(
+                          text: inputText.isNotEmpty ? inputText : null,
+                        ),
+                        style: TextStyle(
+                          // Utilisez une expression conditionnelle pour définir la couleur du texte
+                          // Si inputText est non vide, le texte sera noir, sinon il sera gris
+                          // Vous pouvez ajuster les couleurs selon vos préférences
+                          color: inputText.isNotEmpty ? Colors.green : Colors.black,
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: 'Recherchez une adresse',
+                          hintStyle: TextStyle(
+                            color: Colors.grey,
                           ),
-                          style: TextStyle(
-                            // Utilisez une expression conditionnelle pour définir la couleur du texte
-                            // Si inputText est non vide, le texte sera noir, sinon il sera gris
-                            // Vous pouvez ajuster les couleurs selon vos préférences
-                            color: inputText.isNotEmpty ? Colors.green : Colors.black,
-                          ),
-                          decoration: const InputDecoration(
-                            hintText: 'Recherchez une adresse',
-                            hintStyle: TextStyle(
-                              color: Colors.grey,
-                            ),
-                            border: InputBorder.none,
-                          ),
-                          onSubmitted: (value) {
-                            setState(() {
-                              isLoadingPopUp = true;
-                            });
-                            searchAddresses(value).then((addresses) async {
-                              if (addresses.isNotEmpty) {
-                                try {
-                                  setState(() {
-                                    address = addresses[0];
-                                    shouldHideSize = true;
-                                    isLoadingPopUp = false;
-                                  });
-                                } catch (error) {
-                                  setState(() {
-                                    address = '';
-                                    shouldHideSize = false;
-                                    isLoadingPopUp = false;
-                                  });
-                                  debugPrint('Error getting coordinates: $error');
-                                }
-                              } else {
-                                debugPrint('No addresses found');
+                          border: InputBorder.none,
+                        ),
+                        onSubmitted: (value) {
+                          setState(() {
+                            isLoadingPopUp = true;
+                          });
+                          searchAddresses(value).then((addresses) async {
+                            if (addresses.isNotEmpty) {
+                              try {
+                                setState(() {
+                                  address = addresses[0];
+                                  shouldHideSize = true;
+                                  isLoadingPopUp = false;
+                                });
+                              } catch (error) {
                                 setState(() {
                                   address = '';
                                   shouldHideSize = false;
                                   isLoadingPopUp = false;
                                 });
+                                debugPrint('Error getting coordinates: $error');
                               }
-                            }).catchError((error) {
+                            } else {
+                              debugPrint('No addresses found');
                               setState(() {
                                 address = '';
                                 shouldHideSize = false;
                                 isLoadingPopUp = false;
                               });
-                              debugPrint('Error searching addresses: $error');
+                            }
+                          }).catchError((error) {
+                            setState(() {
+                              address = '';
+                              shouldHideSize = false;
+                              isLoadingPopUp = false;
                             });
-                          },
-                        ),
-                        value: 2,
-                        groupValue: selectedOption,
-                        onChanged: (int? value) {
-                          setState(() {
-                            selectedOption = value;
+                            debugPrint('Error searching addresses: $error');
                           });
                         },
                       ),
+                      value: 2,
+                      groupValue: selectedOption,
+                      onChanged: (int? value) {
+                        setState(() {
+                          selectedOption = value;
+                        });
+                      },
+                    ),
                     isLoadingPopUp ?
                     Container(
-                      color: Colors.transparent,
-                      child :loaderInSizedBox(size: 20)
+                        color: Colors.transparent,
+                        child :loaderInSizedBox(size: 20)
                     ) :
                     address.isNotEmpty ? IntrinsicHeight(
                       child: Container(
@@ -801,8 +825,8 @@ class MobileView {
                         ),
                       ),
                     )
-                : hideSizedBox(shouldHideSize, isInPopup: true),
-                     // hideSizedBox(shouldHideSize, isInPopup: true),
+                        : hideSizedBox(shouldHideSize, isInPopup: true),
+                    // hideSizedBox(shouldHideSize, isInPopup: true),
                     RadioListTile<int>(
                       title: DropdownButton<String>(
                         value: selectedFavoriteAddress,
