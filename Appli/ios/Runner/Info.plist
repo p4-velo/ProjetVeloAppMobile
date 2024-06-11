@@ -47,5 +47,22 @@
 		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
+
+		<key>NSLocationWhenInUseUsageDescription</key>
+        <string>We need your location to provide better services.</string>
+        <key>NSLocationAlwaysUsageDescription</key>
+        <string>We need your location to provide better services.</string>
+        <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+        <string>We need your location to provide better services.</string>
+        
+        <key>UISupportedInterfaceOrientations</key>
+        <array>
+            <string>UIInterfaceOrientationPortrait</string>
+        </array>
+        <key>UISupportedInterfaceOrientations~ipad</key>
+        <array>
+            <string>UIInterfaceOrientationPortrait</string>
+        </array>
+
 	</dict>
 </plist>

@@ -12,6 +12,7 @@ import '../../../POO/IncidentType.dart';
 import '../../../POO/DangerType.dart';
 import 'view_model.dart';
 
+
 class MobileView {
   BuildContext context;
   PopupController popupcontroller;
@@ -29,6 +30,8 @@ class MobileView {
   Function fetchRoute;
   List<LatLng> routePoints;
   Function getCurrentLocation;
+  Map<Permission, PermissionStatus> permissionStatus;
+
 
   List<DangerType> dangerTypes;
   Function addCustomMarkerCallback;
@@ -37,6 +40,8 @@ class MobileView {
   bool isLoadingPage = false;
   bool isLoading = false;
   bool shouldHideSize = true;
+
+
 
 
 
@@ -59,6 +64,7 @@ class MobileView {
     required this.fetchRoute,
     required this.routePoints,
     required this.getCurrentLocation,
+    required this.permissionStatus,
   });
 
   final TextStyle selectedTextStyle = const TextStyle(
@@ -82,7 +88,6 @@ class MobileView {
   render() {
     return StatefulBuilder(
       builder: (BuildContext context, StateSetter setState) {
-        isLoadingPage = false;
         return isLoadingPage
             ? const CustomLoader()
             : Scaffold(
@@ -276,12 +281,15 @@ class MobileView {
                               return ListTile(
                                 title: Text(formattedAddress),
                                 onTap: () async {
+                                  setState(() {
+                                    // isLoadingPage = true;
+                                  });
                                   try {
                                     debugPrint('Getting coordinates for address: $address');
                                     Map<String, double> coordinates = await getCoordinates(address);
                                     LatLng endPoint = LatLng(coordinates['latitude']!, coordinates['longitude']!);
-
-                                    showPopupWithSimpleRadioChoose(context, endPoint);
+                                    moveCamera(endPoint);
+                                    showPopupWithSimpleRadioChoose(context, endPoint, setState);
                                   } catch (error) {
                                     debugPrint('Error getting coordinates: $error');
                                   }
@@ -364,7 +372,6 @@ class MobileView {
   }
 
   Widget hideSizedBox(bool shouldHideSize, { bool isInPopup = false}) {
-    debugPrint('shouldHideSize: $shouldHideSize');
     return shouldHideSize
         ? Container(
         color: isInPopup ?  Colors.transparent: Colors.white,
@@ -596,14 +603,19 @@ class MobileView {
     );
   }
 
-  void showPopupWithSimpleRadioChoose(BuildContext context, LatLng endPoint) {
+  void showPopupWithSimpleRadioChoose(BuildContext context, LatLng endPoint, void Function(void Function()) setState) {
+
     int? selectedOption; // Variable pour stocker la valeur sélectionnée
     String address = '';
     bool isLoadingPopUp = false;
     String inputText = '';
-    late String addressStartPoint;
+    String addressStartPoint = '';
     String? selectedFavoriteAddress;
     List<String> favoriteAddresses = ['Adresse 1', 'Adresse 2', 'Adresse 3'];
+    setState(() {
+      isLoadingPage = false;
+    });
+
 
 
     showDialog(
@@ -634,6 +646,8 @@ class MobileView {
                     ),
                     RadioListTile<int>(
                         title: TextField(
+                          maxLines: 2,
+                          textInputAction: TextInputAction.search,
                           controller: TextEditingController(
                             text: inputText.isNotEmpty ? inputText : null,
                           ),
@@ -769,36 +783,96 @@ class MobileView {
               actions: <Widget>[
                 ElevatedButton(
                   onPressed: () async {
-                    Navigator.of(context).pop(); // Fermer la boîte de dialogue
-                    // Faites quelque chose avec la valeur sélectionnée, si nécessaire
                     if (selectedOption != null) {
                       switch (selectedOption) {
                         case 1:
-                          checkPermission(Permission.location, context);
-                          LatLng userLocation =  getCurrentLocation();
-                          fetchRoute(userLocation, endPoint);
-                          debugPrint('Start with my localisation');
+                          checkPermissionAndFetchLocation(context);
                           break;
                         case 2:
                           debugPrint('Start with address: $addressStartPoint');
-                          Map<String, double> coordinates = await getCoordinates(addressStartPoint);
-                          LatLng startPoint = LatLng(coordinates['latitude']!, coordinates['longitude']!);
-
-                          fetchRoute(startPoint, endPoint);
+                          if (addressStartPoint.isEmpty) {
+                            debugPrint('No address selected');
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Adresse de départ non sélectionnée'),
+                                  content: const Text('Vous devez renseigner une adresse de départ.'),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop(); // Fermer la boîte de dialogue
+                                      },
+                                      child: Text('Fermer'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          } else {
+                            debugPrint('Start with address: $addressStartPoint');
+                            Map<String, double> coordinates = await getCoordinates(addressStartPoint);
+                            LatLng startPoint = LatLng(coordinates['latitude']!, coordinates['longitude']!);
+                            await fetchRoute(startPoint, endPoint);
+                            Navigator.of(context).pop(); // Fermer la boîte de dialogue après avoir terminé
+                          }
+                          break;
                         case 3:
                           print('Option 3 selected');
+                          Navigator.of(context).pop(); // Fermer la boîte de dialogue après avoir terminé
                           break;
                       }
                     }
                   },
                   child: const Text('Choisir'),
                 ),
+
+
+
               ],
             );
           },
         );
       },
     );
+  }
+
+
+  Future<void> checkPermissionAndFetchLocation(BuildContext context) async {
+    PermissionStatus status = await Permission.location.request();
+    if (status == PermissionStatus.granted) {
+      LatLng userLocation = await getCurrentLocation();
+      await fetchRoute(userLocation, points.first);
+      debugPrint('Start with my localisation');
+      Navigator.of(context).pop(); // Fermer la boîte de dialogue si la permission est accordée
+    } else {
+      // Afficher une boîte de dialogue native
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Permission Required'),
+            content: Text('Vous devez accepter la localisation.'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Fermer la boîte de dialogue
+                },
+                child: Text('Fermer'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop(); // Fermer la boîte de dialogue
+                  await openAppSettings();
+
+                },
+                child: Text('Autoriser la localisation'),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 }
 
@@ -824,4 +898,5 @@ Future<void> checkPermission(Permission permission, BuildContext context) async 
     );
   }
 }
+
 

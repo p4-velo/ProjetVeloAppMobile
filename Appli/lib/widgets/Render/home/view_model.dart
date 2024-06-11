@@ -98,6 +98,7 @@ class MapState extends State<Home> {
       fetchRoute: _fetchRoute,
       routePoints: routePoints,
       getCurrentLocation: _getCurrentLocation,
+      permissionStatus: _permissionStatus,
     );
     return currentView.render();
   }
