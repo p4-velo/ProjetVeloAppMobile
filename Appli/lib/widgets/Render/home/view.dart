@@ -1,4 +1,4 @@
-
+// import 'dart:nativewrappers/_internal/vm/lib/core_patch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
@@ -11,6 +11,7 @@ import 'package:skeletton_projet_velo/widgets/CustomWidget/CustomLoader/view_mod
 import '../../../POO/IncidentType.dart';
 import '../../../POO/DangerType.dart';
 import 'view_model.dart';
+import 'dart:math';
 
 
 class MobileView {
@@ -59,8 +60,6 @@ class MobileView {
     required this.addressesModel,
     required this.mapController,
     required this.addMarker,
-    required this.dangerTypes,
-    required this.addCustomMarkerCallback,
     required this.fetchRoute,
     required this.routePoints,
     required this.getCurrentLocation,
@@ -202,20 +201,23 @@ class MobileView {
                             margin: const EdgeInsets.only(right: 15, left: 4.0),
                             padding: const EdgeInsets.all(8.0),
                             decoration: BoxDecoration(
-                              color: global.primary,
+                              color: Colors.white,
                               borderRadius: BorderRadius.circular(30),
                             ),
-                            child: const Icon(
-                              Icons.search,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Expanded(
-                            child: TextField(
-                              decoration: const InputDecoration(
-                                hintText: 'Rechercher un lieu ',
-                                hintStyle: TextStyle(
-                                  color: Colors.grey,
+                            child: Row(
+                              children: [
+                                Container(
+                                  margin: const EdgeInsets.only(
+                                      right: 15, left: 4.0),
+                                  padding: const EdgeInsets.all(8.0),
+                                  decoration: BoxDecoration(
+                                    color: global.primary,
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  child: const Icon(
+                                    Icons.search,
+                                    color: Colors.white,
+                                  ),
                                 ),
                                 border: InputBorder.none,
                               ),
@@ -337,25 +339,71 @@ class MobileView {
                                       incidentType.icon,
                                       color: selectedIndices.contains(index) ? Colors.white : global.secondary,
                                     ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      incidentType.name,
-                                      style: selectedIndices.contains(index) ? selectedTextStyle : unselectedTextStyle,
+                                  )
+                                : hideSizedBox(shouldHideSize),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0, vertical: 8.0),
+                          child: SizedBox(
+                            height: 50,
+                            child: ListView.builder(
+                              itemCount: incidentsTypes.length,
+                              scrollDirection: Axis.horizontal,
+                              itemBuilder: (BuildContext context, int index) {
+                                final incidentType = incidentsTypes[index];
+                                return Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      if (selectedIndices.contains(index)) {
+                                        selectedIndices.remove(index);
+                                      } else {
+                                        selectedIndices.add(index);
+                                      }
+                                      updateMarkersTag(selectedIndices);
+                                    },
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: selectedIndices.contains(index)
+                                            ? global.secondary
+                                            : Colors.white,
+                                        borderRadius: BorderRadius.circular(15),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 8),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            incidentType.icon,
+                                            color:
+                                                selectedIndices.contains(index)
+                                                    ? Colors.white
+                                                    : global.secondary,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            incidentType.name,
+                                            style:
+                                                selectedIndices.contains(index)
+                                                    ? selectedTextStyle
+                                                    : unselectedTextStyle,
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ],
-                                ),
-                              ),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
+                  ],
+                ),
+              );
       },
     );
 
@@ -487,6 +535,11 @@ class MobileView {
     );
   }
 
+  void showIncidentDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String selectedButton = '';
 
   void showChooseStartLocation(BuildContext context) {
     showDialog(
