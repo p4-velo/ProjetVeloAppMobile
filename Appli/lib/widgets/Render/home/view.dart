@@ -2,15 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:skeletton_projet_velo/global.dart' as global;
 import 'package:skeletton_projet_velo/widgets/CustomWidget/CustomLoader/view_model.dart';
 import '../../../POO/IncidentType.dart';
-import '../../../POO/DangerType.dart';
-import 'view_model.dart';
 
 
 class MobileView {
@@ -36,9 +32,12 @@ class MobileView {
   Function createDanger;
   Function addMarkerTest;
   Function generateTest;
+  LatLng? currentPosition;
+  bool isLoadingPage ;
+
+
 
   //fonction de classe
-  bool isLoadingPage = false;
   bool isLoading = false;
   bool shouldHideSize = true;
 
@@ -64,6 +63,9 @@ class MobileView {
     required this.generateTest,
     required this.createDanger,
     required this.addMarkerTest,
+    required this.currentPosition,
+    required this.isLoadingPage,
+
   });
 
   final TextStyle selectedTextStyle = const TextStyle(
@@ -110,13 +112,14 @@ class MobileView {
           ),
           body: Stack(
             children: [
+
               const SizedBox(),
               PopupScope(
                 popupController: popupcontroller,
                 child: FlutterMap(
                   mapController: mapController,
                   options: MapOptions(
-                    initialCenter: points[0],
+                    initialCenter: currentPosition ?? points[0],
                     initialZoom: 14,
                     maxZoom: 20,
                     onTap: (_, __) {
@@ -128,6 +131,7 @@ class MobileView {
                     },
                   ),
                   children: <Widget>[
+
                     TileLayer(
                       urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     ),
@@ -188,6 +192,7 @@ class MobileView {
               ),
               Column(
                 children: [
+
                   Padding(
                     padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0.0),
                     child: Container(
@@ -195,6 +200,7 @@ class MobileView {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(30),
                       ),
+
                       child: Row(
                         children: [
                           Container(
@@ -209,6 +215,7 @@ class MobileView {
                               color: Colors.white,
                             ),
                           ),
+
                           Expanded(
                             child: TextField(
                               decoration: const InputDecoration(
@@ -287,7 +294,6 @@ class MobileView {
                                     debugPrint('Getting coordinates for address: $address');
                                     Map<String, double> coordinates = await getCoordinates(address);
                                     LatLng endPoint = LatLng(coordinates['latitude']!, coordinates['longitude']!);
-                                    moveCamera(endPoint);
                                     showPopupWithSimpleRadioChoose(context, endPoint, setState);
                                   } catch (error) {
                                     debugPrint('Error getting coordinates: $error');
@@ -729,9 +735,6 @@ class MobileView {
                           text: inputText.isNotEmpty ? inputText : null,
                         ),
                         style: TextStyle(
-                          // Utilisez une expression conditionnelle pour définir la couleur du texte
-                          // Si inputText est non vide, le texte sera noir, sinon il sera gris
-                          // Vous pouvez ajuster les couleurs selon vos préférences
                           color: inputText.isNotEmpty ? Colors.green : Colors.black,
                         ),
                         decoration: const InputDecoration(
@@ -863,7 +866,7 @@ class MobileView {
                     if (selectedOption != null) {
                       switch (selectedOption) {
                         case 1:
-                          checkPermissionAndFetchLocation(context);
+                          checkPermissionAndFetchLocation(context, endPoint);
                           break;
                         case 2:
                           debugPrint('Start with address: $addressStartPoint');
@@ -915,27 +918,25 @@ class MobileView {
   }
 
 
-  Future<void> checkPermissionAndFetchLocation(BuildContext context) async {
+  Future<void> checkPermissionAndFetchLocation(BuildContext context, LatLng endPoint) async {
     PermissionStatus status = await Permission.location.request();
     if (status == PermissionStatus.granted) {
       LatLng userLocation = await getCurrentLocation();
-      await fetchRoute(userLocation, points.first);
-      debugPrint('Start with my localisation');
+      await fetchRoute(userLocation, endPoint);
       Navigator.of(context).pop(); // Fermer la boîte de dialogue si la permission est accordée
     } else {
-      // Afficher une boîte de dialogue native
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Permission Required'),
-            content: Text('Vous devez accepter la localisation.'),
+            title: const Text('Permission Required'),
+            content: const Text('Vous devez accepter la localisation.'),
             actions: <Widget>[
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop(); // Fermer la boîte de dialogue
                 },
-                child: Text('Fermer'),
+                child: const Text('Fermer'),
               ),
               TextButton(
                 onPressed: () async {
@@ -943,7 +944,7 @@ class MobileView {
                   await openAppSettings();
 
                 },
-                child: Text('Autoriser la localisation'),
+                child: const Text('Autoriser la localisation'),
               ),
             ],
           );
@@ -957,21 +958,39 @@ Future<void> checkPermission(Permission permission, BuildContext context) async 
   final status = await permission.request();
   if (status.isGranted) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Text('Permission Granted'),
       ),
     );
   } else if (status.isDenied) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Text('Permission Denied'),
       ),
     );
   } else if (status.isPermanentlyDenied) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Text('Permission Permanently Denied'),
       ),
+    );
+  }
+  void showLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevents the dialog from being dismissed by tapping outside of it
+      builder: (BuildContext context) {
+        return const AlertDialog(
+          content: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 20),
+              Text("Chargement de la map"),
+            ],
+          ),
+        );
+      },
     );
   }
 }

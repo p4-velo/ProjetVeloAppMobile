@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -11,10 +12,11 @@ import '../../../POO/DangerType.dart';
 import 'view.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:skeletton_projet_velo/global.dart' as global;
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_compass/flutter_compass.dart';
+
 
 
 class Home extends StatefulWidget {
@@ -29,6 +31,15 @@ class Home extends StatefulWidget {
 class MapState extends State<Home> {
   final PopupController _popupController = PopupController();
   final MapController _mapController = MapController();
+  Marker? _userMarker;
+
+  late StreamSubscription<Position> _positionStreamSubscription;
+  late StreamSubscription<CompassEvent> _compassStreamSubscription;
+
+  LatLng? _currentPosition;
+  double _currentHeading = 0.0;
+
+
   List<Incident> incidents = [];
   List<Marker> markers= [];
 
@@ -47,9 +58,14 @@ class MapState extends State<Home> {
   List<LatLng> routePoints = [];
   Map<Permission, PermissionStatus> _permissionStatus = {};
 
+  bool isLoadingPage = false;
+
+
 
   @override
   void dispose() {
+    _positionStreamSubscription.cancel();
+    _compassStreamSubscription.cancel();
     super.dispose();
   }
 
@@ -57,7 +73,11 @@ class MapState extends State<Home> {
 
   @override
   void initState() {
-    _getPermissionStatus();
+    // isLoadingPage = true;
+
+    _determinePosition();
+    _startCompassAndLocalisationStream();
+
     incidents = generateRandomIncidents(0);
     markers = filterIncidentsBySelectedTypes(incidents)
         .map<Marker>(
@@ -91,13 +111,14 @@ class MapState extends State<Home> {
       addMarker: addMarker,
       fetchRoute: _fetchRoute,
       routePoints: routePoints,
-
-      // addIncidentMarker: addIncidentMarker,
       getCurrentLocation: _getCurrentLocation,
       permissionStatus: _permissionStatus,
       generateTest: generateTest,
       createDanger: createDanger,
       addMarkerTest: addMarkerTest,
+      currentPosition: _currentPosition,
+      isLoadingPage: isLoadingPage,
+
     );
     return currentView.render();
   }
@@ -106,10 +127,8 @@ class MapState extends State<Home> {
   LatLng generateRandomCoordinates() {
     final random = Random();
     const dijonCenter = LatLng(47.322047, 5.041480);
-
     final lat = random.nextDouble() * 0.05 - 0.025 + dijonCenter.latitude;
     final lng = random.nextDouble() * 0.05 - 0.025 + dijonCenter.longitude;
-
     return LatLng(lat, lng);
   }
   
@@ -157,8 +176,6 @@ class MapState extends State<Home> {
     return filteredIncidents;
   }
 
-
-
   void addMarker(LatLng point) {
     Marker marker = Marker(
       point: point,
@@ -173,6 +190,40 @@ class MapState extends State<Home> {
       markers = newMarkers;
     });
   }
+
+
+  void updateMarkerUser(LatLng point, double heading, {bool withMoveCamera = false}) {
+    double mapRotation = _mapController.camera.rotation;
+    print('mapRotation: $mapRotation');
+    Marker newMarker = Marker(
+      width: 80.0,
+      height: 80.0,
+      point: point,
+      rotate: false,
+      child: Transform.rotate(
+        angle: (heading + mapRotation) * (3.1415926535897932 / 180),
+        child: const Icon(
+          Icons.navigation,
+          color: Colors.blue,
+          size: 40,
+        ),
+      ),
+    );
+
+    setState(() {
+      if (_userMarker != null) {
+        markers.remove(_userMarker);
+      }
+      markers.add(newMarker);
+      _userMarker = newMarker;
+      markers = List.from(markers);
+      if (withMoveCamera) {
+        _mapController.move(point, _mapController.camera.zoom);
+      }
+
+    });
+  }
+
 
   void addMarkerTest(LatLng point, String incidentName) {
 
@@ -397,11 +448,8 @@ class MapState extends State<Home> {
         routePoints = coordinates.map((point) => LatLng(point[1], point[0])).toList();
         addMarker(endRoute);
 
-        // _mapController.fitBounds(LatLngBounds.fromPoints([startRoute, endRoute]));   //zoom bon pour tout voir
-        // _mapController.moveAndRotate(startRoute, 18.0,0.0);
+        _mapController.fitBounds(LatLngBounds.fromPoints([startRoute, endRoute]));   //zoom bon pour tout voir
         isNavigating = true;
-        _startNavigation();
-        //lancer la navigation
       });
 
     } else {
@@ -409,16 +457,8 @@ class MapState extends State<Home> {
     }
   }
 
-  void _startNavigation() async {
-    for (var point in routePoints) {
-      if (!isNavigating) break;
-      _mapController.move(point, 18.0);
-      // await Future.delayed(Duration(seconds: 2));
-    }
-  }
 
   Future<String> _getUserCurrentAddress() async {
-    // Récupérer la position actuelle de l'utilisateur
     Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
 
     // Convertir la position en une adresse lisible
@@ -429,17 +469,6 @@ class MapState extends State<Home> {
     return '${placemark.thoroughfare}, ${placemark.subLocality}, ${placemark.locality}, ${placemark.administrativeArea}, ${placemark.postalCode}, ${placemark.country}';
   }
 
-
-
-  Future<void> _getPermissionStatus() async {
-    Map<Permission, PermissionStatus> permissionStatus = await [
-      Permission.location,
-    ].request();
-    setState(() {
-      _permissionStatus = permissionStatus;
-    });
-  }
-
   Future<LatLng> _getCurrentLocation() async {
     Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
@@ -447,5 +476,55 @@ class MapState extends State<Home> {
     LatLng currentPosition = LatLng(position.latitude, position.longitude);
     return currentPosition;
   }
+
+  void _onCompassData(CompassEvent event) {
+    if (event.heading != null) {
+      setState(() {
+        _currentHeading = event.heading!;
+        if (_currentPosition != null){
+          updateMarkerUser(_currentPosition!, _currentHeading);
+        }
+      });
+    }
+  }
+
+  void _startCompassAndLocalisationStream() {
+    _compassStreamSubscription = FlutterCompass.events!.listen(_onCompassData);
+    _positionStreamSubscription = Geolocator.getPositionStream().listen((Position position) {
+      setState(() {
+        _currentPosition = LatLng(position.latitude, position.longitude);
+        if (_currentPosition != null){
+          updateMarkerUser(_currentPosition!, _currentHeading);
+        }      });
+    });
+  }
+
+  Future<void> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error('Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    Position position = await Geolocator.getCurrentPosition();
+    setState(() {
+      _currentPosition = LatLng(position.latitude, position.longitude);
+    });
+  }
+
 
 }
