@@ -76,7 +76,7 @@ class MapState extends State<Home> {
     // isLoadingPage = true;
 
     _determinePosition();
-    _startCompassAndLocalisationStream();
+    // _startCompassAndLocalisationStream();
 
     incidents = generateRandomIncidents(0);
     markers = filterIncidentsBySelectedTypes(incidents)
@@ -194,7 +194,6 @@ class MapState extends State<Home> {
 
   void updateMarkerUser(LatLng point, double heading, {bool withMoveCamera = false}) {
     double mapRotation = _mapController.camera.rotation;
-    print('mapRotation: $mapRotation');
     Marker newMarker = Marker(
       width: 80.0,
       height: 80.0,
@@ -406,6 +405,7 @@ class MapState extends State<Home> {
           .map<String>((e) => e['display_name'] as String)
           .where((address) => address.contains('21000'))
           .toList();
+      debugPrint('Found ${places.length} places for query $query');
       return places;
     } else {
       throw Exception('Failed to search addresses');
@@ -524,6 +524,7 @@ class MapState extends State<Home> {
     setState(() {
       _currentPosition = LatLng(position.latitude, position.longitude);
     });
+
   }
 
 
