@@ -45,7 +45,7 @@ class MobileView {
                 ],
               ),
               const SizedBox(height: 20),
-              //Text(text),
+              Text(text),
               Expanded(
                 child: ListView(
                   children: [
