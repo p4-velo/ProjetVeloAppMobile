@@ -25,6 +25,10 @@ class MobileView {
   MapController mapController;
   Function addMarker;
   Function fetchRoute;
+  Function startNavigation;
+
+  Function getDistance;
+  Function getIncidentCount;
 
   List<LatLng> routePoints;
   Function getCurrentLocation;
@@ -65,6 +69,9 @@ class MobileView {
     required this.generateTest,
     required this.createDanger,
     required this.addMarkerTest,
+    required this.startNavigation,
+    required this.getDistance,
+    required this.getIncidentCount,
     required this.currentPosition,
     required this.internetLoading,
     required this.isLoading,
@@ -310,8 +317,9 @@ class MobileView {
                       onPressed: () {
                         Navigator.of(context).pop();
                         if (selectedButton.isNotEmpty) {
-                          LatLng coordinates = generateTest();
-                          addMarkerTest(coordinates, selectedButton);
+                          // LatLng coordinates = generateTest();
+                          // addMarkerTest(coordinates, selectedButton);
+                          checkPermissionAndAddMarkerTest(selectedButton);
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -497,7 +505,7 @@ class MobileView {
               ),
               content: SizedBox(
                 width: 400,
-                height: 350,
+                height: 300,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
@@ -521,8 +529,7 @@ class MobileView {
                           text: inputText.isNotEmpty ? inputText : null,
                         ),
                         style: TextStyle(
-                          color: inputText.isNotEmpty ? Colors.green : Colors
-                              .black,
+                          color: inputText.isNotEmpty ? Colors.green : Colors.black,
                         ),
                         decoration: const InputDecoration(
                           hintText: 'Recherchez une adresse',
@@ -622,7 +629,8 @@ class MobileView {
                     RadioListTile<int>(
                       title: DropdownButton<String>(
                         value: selectedFavoriteAddress,
-                        items: favoriteAddresses.map((String address) {
+                        items: favoriteAddresses
+                            .map((String address) {
                           return DropdownMenuItem<String>(
                             value: address,
                             child: Text(address),
@@ -630,10 +638,10 @@ class MobileView {
                         }).toList(),
                         onChanged: selectedOption == 3
                             ? (String? newValue) {
-                          setState(() {
-                            selectedFavoriteAddress = newValue!;
-                          });
-                        }
+                                setState(() {
+                                  selectedFavoriteAddress = newValue!;
+                                });
+                              }
                             : null,
                         hint: const Text('Mes favoris'),
                       ),
@@ -644,74 +652,87 @@ class MobileView {
                           selectedOption = value!;
                         });
                       },
-                    )
-
+                    ),
                   ],
                 ),
               ),
               actions: <Widget>[
-                ElevatedButton(
-                  onPressed: () async {
-                    if (selectedOption == null) {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text('Sélection requise'),
-                            content: const Text('Veuillez sélectionner une des trois options.'),
-                            actions: <Widget>[
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop(); // Fermer la boîte de dialogue
-                                },
-                                child: const Text('Fermer'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                      return; // Sortir de la fonction onPressed si aucune option n'est sélectionnée
-                    }
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (selectedOption != null) {
+                        switch (selectedOption) {
+                          case 1:
+                            checkPermissionAndFetchLocation(context, endPoint);
+                            Navigator.of(context).pop();
 
-                    switch (selectedOption) {
-                      case 1:
-                        checkPermissionAndFetchLocation(context, endPoint);
-                        break;
-                      case 2:
-                        debugPrint('Start with address: $addressStartPoint');
-                        if (addressStartPoint.isEmpty) {
-                          debugPrint('No address selected');
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: const Text('Adresse de départ non sélectionnée'),
-                                content: const Text('Vous devez renseigner une adresse de départ.'),
-                                actions: <Widget>[
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop(); // Fermer la boîte de dialogue
-                                    },
-                                    child: const Text('Fermer'),
-                                  ),
-                                ],
+                            double distance = getDistance();
+                            int incidentCount = getIncidentCount();
+                            showRouteInfoDialog(context, distance, incidentCount);
+
+                            break;
+                          case 2:
+                            debugPrint('Start with address: $addressStartPoint');
+                            if (addressStartPoint.isEmpty) {
+                              debugPrint('No address selected');
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text(
+                                        'Adresse de départ non sélectionnée'),
+                                    content: const Text(
+                                        'Vous devez renseigner une adresse de départ.'),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context)
+                                              .pop(); // Fermer la boîte de dialogue
+                                        },
+                                        child: Text('Fermer'),
+                                      ),
+                                    ],
+                                  );
+                                },
                               );
-                            },
-                          );
-                        } else {
-                          Map<String, double> coordinates = await getCoordinates(addressStartPoint, useLoader: false);
-                          LatLng startPoint = LatLng(coordinates['latitude']!, coordinates['longitude']!);
-                          await fetchRoute(startPoint, endPoint);
-                          Navigator.of(context).pop(); // Fermer la boîte de dialogue après avoir terminé
+                            } else {
+                              debugPrint('Start with address: $addressStartPoint');
+                              Map<String, double> coordinates =
+                              await getCoordinates(addressStartPoint);
+                              LatLng startPoint = LatLng(
+                                  coordinates['latitude']!,
+                                  coordinates['longitude']!);
+                              await fetchRoute(startPoint, endPoint);
+                              Navigator.of(context).pop(); // Fermer la boîte de dialogue après avoir terminé
+
+                              // Afficher la nouvelle pop-up "Hello World"
+
+                              double distance = getDistance();
+                              int incidentCount = getIncidentCount();
+                              showRouteInfoDialog(context, distance, incidentCount);
+                            }
+                            break;
+                          case 3:
+                            print('Option 3 selected');
+                            Navigator.of(context).pop(); // Fermer la boîte de dialogue après avoir terminé
+                            break;
                         }
-                        break;
-                      case 3:
-                        debugPrint('Option 3 selected');
-                        Navigator.of(context).pop(); // Fermer la boîte de dialogue après avoir terminé
-                        break;
-                    }
-                  },
-                  child: const Text('Choisir'),
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: global.secondary,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 36),
+                        padding: const EdgeInsets.symmetric(vertical: 16)),
+                    child: const Text(
+                      'CHOISIR',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             );
@@ -721,6 +742,92 @@ class MobileView {
     );
   }
 
+  void showLocalisationPermissionDialog(BuildContext context){
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Permission Required'),
+          content: Text('Vous devez accepter la localisation.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Fermer la boîte de dialogue
+              },
+              child: Text('Fermer'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Fermer la boîte de dialogue
+                await openAppSettings();
+              },
+              child: Text('Autoriser la localisation'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void showRouteInfoDialog(BuildContext context, double distance, int incidentCount) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Informations sur le trajet'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Distance à parcourir: ${distance.toStringAsFixed(2)} km'),
+              Text('Nombre d\'incidents sur la route: $incidentCount'),
+            ],
+          ),
+          actions: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  style: TextButton.styleFrom(
+                    backgroundColor: global.tertiary,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(150, 36),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text(
+                    'ANNULER',
+                    style: TextStyle(
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  style: TextButton.styleFrom(
+                    backgroundColor: global.secondary,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(150, 36),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text(
+                    'OK !',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   Future<void> checkPermissionAndFetchLocation(BuildContext context,
       LatLng endPoint) async {
@@ -739,6 +846,20 @@ class MobileView {
     }
   }
 
+  Future<bool> isLocationPermissionAutorised(BuildContext context) async {
+    PermissionStatus status = await Permission.location.request();
+    return status == PermissionStatus.granted ? true : false;
+  }
+
+  Future<void> checkPermissionAndAddMarkerTest(String selectedButton) async {
+    bool isGranted = await isLocationPermissionAutorised(context);
+    if (isGranted) {
+      LatLng currentLocation = await getCurrentLocation();
+      addMarkerTest(currentLocation, selectedButton);
+    } else {
+      showLocalisationPermissionDialog(context);
+    }
+  }
 
   Widget buildShowPermissionDialog(BuildContext context) {
     return Expanded(
