@@ -90,6 +90,7 @@ class MapState extends State<Home> {
       mapController: _mapController,
       addMarker: addMarker,
       fetchRoute: _fetchRoute,
+      startNavigation: _startNavigation,
       routePoints: routePoints,
 
       // addIncidentMarker: addIncidentMarker,
@@ -98,6 +99,9 @@ class MapState extends State<Home> {
       generateTest: generateTest,
       createDanger: createDanger,
       addMarkerTest: addMarkerTest,
+
+      getDistance: getDistance,
+      getIncidentCount: getIncidentCount,
     );
     return currentView.render();
   }
@@ -174,9 +178,10 @@ class MapState extends State<Home> {
     });
   }
 
-  void addMarkerTest(LatLng point, String incidentName) {
+  void addMarkerTest(LatLng point, String incidentName) async {
 
     final random = Random();
+    LatLng currentLocation = await _getCurrentLocation();
 
     switch (incidentName) {
       case 'travaux':
@@ -186,19 +191,20 @@ class MapState extends State<Home> {
         final incidentType = IncidentType(name: 'Travaux', icon: Icons.engineering);
         final location = Localisation(
           id: random.nextInt(100000),
-          latitude: generateRandomCoordinates().latitude,
-          longitude: generateRandomCoordinates().longitude,
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude,
         );
         final incident = Incident(id: incidents.length, incidentType: incidentType, localisation: location);
         incidents.add(incident);
 
         Marker marker = Marker(
           point: LatLng(location.latitude, location.longitude),
-          child: const Icon(
+          child: Icon(
             Icons.engineering,
+            color: global.primary,
           ),
         );
-        List<Marker> newMarkers =List.from(markers);
+        List<Marker> newMarkers = List.from(markers);
         newMarkers.add(marker);
         setState(() {
           markers = newMarkers;
@@ -212,16 +218,17 @@ class MapState extends State<Home> {
         final incidentType = IncidentType(name: 'Incidents', icon: Icons.car_crash);
         final location = Localisation(
           id: random.nextInt(100000),
-          latitude: generateRandomCoordinates().latitude,
-          longitude: generateRandomCoordinates().longitude,
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude,
         );
         final incident = Incident(id: incidents.length, incidentType: incidentType, localisation: location);
         incidents.add(incident);
 
         Marker marker = Marker(
           point: LatLng(location.latitude, location.longitude),
-          child: const Icon(
+          child: Icon(
             Icons.car_crash,
+            color: global.primary,
           ),
         );
         List<Marker> newMarkers =List.from(markers);
@@ -238,16 +245,17 @@ class MapState extends State<Home> {
         final incidentType = IncidentType(name: 'Incidents', icon: Icons.flood);
         final location = Localisation(
           id: random.nextInt(100000),
-          latitude: generateRandomCoordinates().latitude,
-          longitude: generateRandomCoordinates().longitude,
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude,
         );
         final incident = Incident(id: incidents.length, incidentType: incidentType, localisation: location);
         incidents.add(incident);
 
         Marker marker = Marker(
           point: LatLng(location.latitude, location.longitude),
-          child: const Icon(
+          child: Icon(
             Icons.flood,
+            color: global.primary,
           ),
         );
         List<Marker> newMarkers =List.from(markers);
@@ -263,16 +271,17 @@ class MapState extends State<Home> {
         final incidentType = IncidentType(name: 'Incidents', icon: Icons.report);
         final location = Localisation(
           id: random.nextInt(100000),
-          latitude: generateRandomCoordinates().latitude,
-          longitude: generateRandomCoordinates().longitude,
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude, 
         );
         final incident = Incident(id: incidents.length, incidentType: incidentType, localisation: location);
         incidents.add(incident);
 
         Marker marker = Marker(
           point: LatLng(location.latitude, location.longitude),
-          child: const Icon(
+          child: Icon(
             Icons.report,
+            color: global.primary,
           ),
         );
         List<Marker> newMarkers =List.from(markers);
@@ -307,6 +316,7 @@ class MapState extends State<Home> {
         point: LatLng(incident.localisation.latitude, incident.localisation.longitude),
         child : Icon(
           incident.incidentType.icon,
+          color: global.primary,
         ),
       );
     }).toList();
@@ -379,12 +389,65 @@ class MapState extends State<Home> {
     }
   }
 
+  int calculateIncidentsOnRoute(List<Incident> incidents, List<LatLng> routePoints) {
+    double threshold = 0.001;
+    int incidentCount = 0;
+    Distance distance = Distance();
+
+    for (var incident in incidents) {
+      for (var point in routePoints) {
+        double distanceInKm = distance.as(
+          LengthUnit.Kilometer,
+          LatLng(incident.localisation.latitude, incident.localisation.longitude),
+          point,
+        );
+        // Si l'incident est à une distance inférieure au seuil, on le compte
+        if (distanceInKm < threshold) {
+          incidentCount++;
+          break; // On peut arrêter de vérifier les autres points de l'itinéraire pour cet incident
+        }
+      }
+    }
+    return incidentCount;
+  }
+
+  List<LatLng> interpolatePoints(List<LatLng> routePoints, double distanceMeters) {
+    final Distance distance = Distance();
+    List<LatLng> interpolatedPoints = [];
+
+    for (int i = 0; i < routePoints.length - 1; i++) {
+      LatLng start = routePoints[i];
+      LatLng end = routePoints[i + 1];
+
+      interpolatedPoints.add(start);
+
+      double segmentDistance = distance.as(
+        LengthUnit.Meter,
+        start,
+        end,
+      );
+      int numberOfPoints = (segmentDistance / distanceMeters).floor();
+
+      for (int j = 1; j <= numberOfPoints; j++) {
+        double fraction = j / numberOfPoints;
+        double lat = start.latitude + (end.latitude - start.latitude) * fraction;
+        double lon = start.longitude + (end.longitude - start.longitude) * fraction;
+        interpolatedPoints.add(LatLng(lat, lon));
+      }
+    }
+    interpolatedPoints.add(routePoints.last);
+    return interpolatedPoints;
+  }
+
   String formatAddress(String address) {
     List<String> parts = address.split(',');
     String formattedAddress = '${parts[0]}  ${parts[1]}, ${parts[3]}';
 
     return formattedAddress;
   }
+
+  double _routeDistance = 0.0;
+  int _incidentCount = 0;
 
   Future<void> _fetchRoute(LatLng startRoute, LatLng endRoute ) async {
     debugPrint('Fetching route from $startRoute to $endRoute');
@@ -393,20 +456,33 @@ class MapState extends State<Home> {
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       final List<dynamic> coordinates = data['routes'][0]['geometry']['coordinates'];
+      
+      final double distance = data['routes'][0]['distance']/1000;
+      
       setState(() {
         routePoints = coordinates.map((point) => LatLng(point[1], point[0])).toList();
-        addMarker(endRoute);
+        List<LatLng> interpolatedRoutePoints = interpolatePoints(routePoints, 50.0);
+        int incidentCount = calculateIncidentsOnRoute(incidents, interpolatedRoutePoints);
 
-        // _mapController.fitBounds(LatLngBounds.fromPoints([startRoute, endRoute]));   //zoom bon pour tout voir
-        // _mapController.moveAndRotate(startRoute, 18.0,0.0);
+        _routeDistance = distance;
+        _incidentCount = incidentCount;
+
+        addMarker(endRoute);
         isNavigating = true;
         _startNavigation();
-        //lancer la navigation
       });
 
     } else {
       print('Failed to load route');
     }
+  }
+
+  double getDistance(){
+    return _routeDistance;
+  }
+
+  int getIncidentCount(){
+    return _incidentCount;
   }
 
   void _startNavigation() async {
