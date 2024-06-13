@@ -16,6 +16,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_compass/flutter_compass.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+
 
 
 
@@ -58,7 +60,12 @@ class MapState extends State<Home> {
   List<LatLng> routePoints = [];
   Map<Permission, PermissionStatus> _permissionStatus = {};
 
+  bool internetLoading = true;
+  bool isLoading = false;
   bool isLoadingPage = false;
+  bool hasUserLocation = false;
+  bool showAddress = true;
+  bool? hasLocalisationPermission;
 
 
 
@@ -73,10 +80,10 @@ class MapState extends State<Home> {
 
   @override
   void initState() {
-    // isLoadingPage = true;
 
+    checkInternetConnection();
     _determinePosition();
-    // _startCompassAndLocalisationStream();
+    _startCompassAndLocalisationStream();
 
     incidents = generateRandomIncidents(0);
     markers = filterIncidentsBySelectedTypes(incidents)
@@ -117,8 +124,15 @@ class MapState extends State<Home> {
       createDanger: createDanger,
       addMarkerTest: addMarkerTest,
       currentPosition: _currentPosition,
+      internetLoading: internetLoading,
+      isLoading: isLoading,
+      shouldHideSize: shouldHideSize,
+      performSearch: performSearch,
+      checkInternetConnection: checkInternetConnection,
+      hasUserLocation: hasUserLocation,
+      hasLocalisationPermission: hasLocalisationPermission,
       isLoadingPage: isLoadingPage,
-
+      showAddress: showAddress,
     );
     return currentView.render();
   }
@@ -394,7 +408,33 @@ class MapState extends State<Home> {
     });
   }
 
-  Future<List<String>> searchAddresses(String query) async {
+  Future<void> performSearch(String query) async {
+    isLoading = true;
+    try {
+      final addressesFuntion = await searchAddresses(query);
+      if (addresses.isNotEmpty) {
+        debugPrint('Address found');
+      } else {
+        debugPrint('No addresses found');
+        addresses = addressesFuntion;
+        shouldHideSize = false;
+      }
+    } catch (error) {
+      addresses = [];
+      shouldHideSize = false;
+      debugPrint('Error searching addresses: $error');
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  Future<List<String>> searchAddresses(String query, {bool useLoader = true,  bool showAddressOnHome = true}) async {
+    if(useLoader) isLoading =true;
+    if (showAddressOnHome) {
+      setState(() {
+      showAddress = true;
+    });
+    }
     final response = await http.get(Uri.parse('https://nominatim.openstreetmap.org/search?q=$query&countrycodes=fr&format=json'));
 
     if (response.statusCode == 200) {
@@ -406,13 +446,23 @@ class MapState extends State<Home> {
           .where((address) => address.contains('21000'))
           .toList();
       debugPrint('Found ${places.length} places for query $query');
+
+      if (places.isNotEmpty){
+        shouldHideSize = true;
+      }else {
+        addresses = [];
+        showAddress = false;
+      }
       return places;
     } else {
+      addresses = [];
       throw Exception('Failed to search addresses');
     }
   }
 
-  Future<Map<String, double>> getCoordinates(String address) async {
+  Future<Map<String, double>> getCoordinates(String address, {bool useLoader = true}) async {
+    debugPrint('useLoader : $useLoader');
+    if (useLoader) setState(() {isLoadingPage = true;});
     final response = await http.get(Uri.parse('https://nominatim.openstreetmap.org/search?format=json&q=$address'));
 
     if (response.statusCode == 200) {
@@ -421,6 +471,8 @@ class MapState extends State<Home> {
         final Map<String, dynamic> firstResult = data.first;
         final double lat = double.parse(firstResult['lat']);
         final double lon = double.parse(firstResult['lon']);
+        if (useLoader) setState(() {isLoadingPage = false;});
+        showAddress = false;
         return {'latitude': lat, 'longitude': lon};
       } else {
         throw Exception('No results found for the address');
@@ -482,6 +534,12 @@ class MapState extends State<Home> {
       setState(() {
         _currentHeading = event.heading!;
         if (_currentPosition != null){
+          if (hasUserLocation == false){
+            setState(() {
+              debugPrint('User location found');
+              hasUserLocation = true;
+            });
+          }
           updateMarkerUser(_currentPosition!, _currentHeading);
         }
       });
@@ -494,37 +552,88 @@ class MapState extends State<Home> {
       setState(() {
         _currentPosition = LatLng(position.latitude, position.longitude);
         if (_currentPosition != null){
+          if (hasUserLocation == false){
+            setState(() {
+              hasUserLocation = true;
+            });
+          }
           updateMarkerUser(_currentPosition!, _currentHeading);
-        }      });
+        }
+      });
     });
   }
-
-  Future<void> _determinePosition() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+// Function to check if location services are enabled
+  Future<bool> _checkLocationService() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      return Future.error('Location services are disabled.');
+      setState(() {
+        hasUserLocation = false;
+      });
+      throw Exception('Location services are disabled.');
     }
+    return true;
+  }
 
-    permission = await Geolocator.checkPermission();
+  Future<void> _checkLocationPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        return Future.error('Location permissions are denied');
+        setState(() {
+          hasLocalisationPermission = false;
+          hasUserLocation = false;
+        });
+        throw Exception('Location permissions are denied.');
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      return Future.error('Location permissions are permanently denied, we cannot request permissions.');
+      setState(() {
+        hasUserLocation = false;
+        hasLocalisationPermission = false;
+      });
+      throw Exception('Location permissions are permanently denied.');
     }
 
-    Position position = await Geolocator.getCurrentPosition();
-    setState(() {
-      _currentPosition = LatLng(position.latitude, position.longitude);
-    });
+    if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+      setState(() {
+        hasLocalisationPermission = true;
+      });
+    }
+  }
 
+  Future<void> _determinePosition() async {
+    try {
+      await _checkLocationService();
+      await _checkLocationPermission();
+
+      Position position = await Geolocator.getCurrentPosition();
+
+      setState(() {
+        hasUserLocation = true;
+        _currentPosition = LatLng(position.latitude, position.longitude);
+      });
+    } catch (e) {
+      print('Error while determining position: $e');
+    }
+  }
+
+
+
+  Future<void> checkInternetConnection() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    debugPrint(' conectivity result : ${connectivityResult.toString()}');
+
+    if (connectivityResult.toString() == "ConnectivityResult.none") {
+      setState(() {
+        internetLoading = true;
+      });
+    } else {
+      setState(() {
+        internetLoading = false;
+      });
+    }
   }
 
 

@@ -9,6 +9,7 @@ import 'package:skeletton_projet_velo/widgets/CustomWidget/CustomLoader/view_mod
 import '../../../POO/IncidentType.dart';
 
 
+
 class MobileView {
   BuildContext context;
   PopupController popupcontroller;
@@ -33,13 +34,15 @@ class MobileView {
   Function addMarkerTest;
   Function generateTest;
   LatLng? currentPosition;
+  bool internetLoading;
+  bool isLoading;
+  bool shouldHideSize;
+  Function performSearch;
+  Function checkInternetConnection;
+  bool hasUserLocation;
+  bool? hasLocalisationPermission;
   bool isLoadingPage;
-
-
-  //fonction de classe
-  bool isLoading = false;
-  bool shouldHideSize = true;
-
+  bool showAddress;
 
   MobileView({
     required this.context,
@@ -63,8 +66,15 @@ class MobileView {
     required this.createDanger,
     required this.addMarkerTest,
     required this.currentPosition,
+    required this.internetLoading,
+    required this.isLoading,
+    required this.shouldHideSize,
+    required this.performSearch,
+    required this.checkInternetConnection,
+    required this.hasUserLocation,
+    required this.hasLocalisationPermission,
     required this.isLoadingPage,
-
+    required this.showAddress,
   });
 
   final TextStyle selectedTextStyle = const TextStyle(
@@ -85,38 +95,62 @@ class MobileView {
     mapController.move(point, 17);
   }
 
+
   render() {
     return StatefulBuilder(
       builder: (BuildContext context, StateSetter setState) {
-        return
-          isLoadingPage
-            ?
-        const CustomLoader()
-            :
-        Scaffold(
+
+
+        return Scaffold(
           resizeToAvoidBottomInset: false,
           floatingActionButton: buildButtonIncident(context),
-            body: Stack(
+          body: Stack(
             children: [
               const SizedBox(),
 
-              buildMapWidget(popupcontroller: popupcontroller, mapController: mapController, currentPosition: currentPosition, points: points, markers: markers, routePoints: routePoints, context: context, shouldHideSize: shouldHideSize, setState: setState,),
+              buildMapWidget(
+                popupcontroller: popupcontroller,
+                mapController: mapController,
+                currentPosition: currentPosition,
+                points: points,
+                markers: markers,
+                routePoints: routePoints,
+                context: context,
+                shouldHideSize: shouldHideSize,
+                setState: setState,
+              ),
 
               Column(
                 children: [
+                  // Display the message if location permission is not granted
+                  hasLocalisationPermission != null && !hasLocalisationPermission!
+                      ? buildLocationWarning() : Container(),
                   buildInputSearch(context, setState),
                   isLoading
-                      ?
-                  loaderInSizedBox()
-                      : addressesModel.isNotEmpty
-                      ?
-                  buildListAddressResult(addressesModel: addressesModel, context: context, setState: setState,)
-                      :
-                  hideSizedBox(shouldHideSize),
-
-          buildTagList(incidentsTypes: incidentsTypes, selectedIndices: selectedIndices, setState: setState, context: context, updateMarkersTag: updateMarkersTag, selectedTextStyle: selectedTextStyle, unselectedTextStyle: unselectedTextStyle,)
-
-          ],
+                      ? loaderInSizedBox()
+                      : addressesModel.isNotEmpty && showAddress
+                      ? buildListAddressResult(
+                    addressesModel: addressesModel,
+                    context: context,
+                    setState: setState,
+                  )
+                      :  !showAddress ? hideSizedBox(shouldHideSize) : Container(),
+                  buildTagList(
+                    incidentsTypes: incidentsTypes,
+                    selectedIndices: selectedIndices,
+                    setState: setState,
+                    context: context,
+                    updateMarkersTag: updateMarkersTag,
+                    selectedTextStyle: selectedTextStyle,
+                    unselectedTextStyle: unselectedTextStyle,
+                  ),
+                  internetLoading
+                      ? buildInternetDialog(context)
+                      : !hasUserLocation && hasLocalisationPermission != null && hasLocalisationPermission!  && !internetLoading
+                      ? buildLoaderMyLoacalisation(context)
+                      : Container(),
+                  if(isLoadingPage) Expanded(child :loaderInSizedBox(size: 50),),
+                ],
               ),
             ],
           ),
@@ -124,6 +158,8 @@ class MobileView {
       },
     );
   }
+
+
 
   loaderInSizedBox({double size = 100}) {
     return SizedBox(
@@ -275,17 +311,7 @@ class MobileView {
                         Navigator.of(context).pop();
                         if (selectedButton.isNotEmpty) {
                           LatLng coordinates = generateTest();
-
-                          // ViewModel viewModel = ViewModel(
-                          //   mapController: mapController,
-                          //   markers: markers,
-                          // );
-                          //createDanger(selectedButton, coordinates);
-
                           addMarkerTest(coordinates, selectedButton);
-
-                          // addMarker(coordinates);
-                          // addIncidentMarker(coordinates, selectedButton);
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -458,10 +484,6 @@ class MobileView {
     String addressStartPoint = '';
     String? selectedFavoriteAddress;
     List<String> favoriteAddresses = ['Adresse 1', 'Adresse 2', 'Adresse 3'];
-    setState(() {
-      isLoadingPage = false;
-    });
-
 
     showDialog(
       context: context,
@@ -513,7 +535,8 @@ class MobileView {
                           setState(() {
                             isLoadingPopUp = true;
                           });
-                          searchAddresses(value).then((addresses) async {
+
+                          searchAddresses(value, useLoader: false, showAddressOnHome : false).then((addresses) {
                             if (addresses.isNotEmpty) {
                               try {
                                 setState(() {
@@ -629,60 +652,67 @@ class MobileView {
               actions: <Widget>[
                 ElevatedButton(
                   onPressed: () async {
-                    if (selectedOption != null) {
-                      switch (selectedOption) {
-                        case 1:
-                          checkPermissionAndFetchLocation(context, endPoint);
-                          break;
-                        case 2:
-                          debugPrint('Start with address: $addressStartPoint');
-                          if (addressStartPoint.isEmpty) {
-                            debugPrint('No address selected');
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: const Text(
-                                      'Adresse de départ non sélectionnée'),
-                                  content: const Text(
-                                      'Vous devez renseigner une adresse de départ.'),
-                                  actions: <Widget>[
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.of(context)
-                                            .pop(); // Fermer la boîte de dialogue
-                                      },
-                                      child: Text('Fermer'),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          } else {
-                            debugPrint(
-                                'Start with address: $addressStartPoint');
-                            Map<String,
-                                double> coordinates = await getCoordinates(
-                                addressStartPoint);
-                            LatLng startPoint = LatLng(coordinates['latitude']!,
-                                coordinates['longitude']!);
-                            await fetchRoute(startPoint, endPoint);
-                            Navigator.of(context)
-                                .pop(); // Fermer la boîte de dialogue après avoir terminé
-                          }
-                          break;
-                        case 3:
-                          print('Option 3 selected');
-                          Navigator.of(context)
-                              .pop(); // Fermer la boîte de dialogue après avoir terminé
-                          break;
-                      }
+                    if (selectedOption == null) {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text('Sélection requise'),
+                            content: const Text('Veuillez sélectionner une des trois options.'),
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop(); // Fermer la boîte de dialogue
+                                },
+                                child: const Text('Fermer'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                      return; // Sortir de la fonction onPressed si aucune option n'est sélectionnée
+                    }
+
+                    switch (selectedOption) {
+                      case 1:
+                        checkPermissionAndFetchLocation(context, endPoint);
+                        break;
+                      case 2:
+                        debugPrint('Start with address: $addressStartPoint');
+                        if (addressStartPoint.isEmpty) {
+                          debugPrint('No address selected');
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text('Adresse de départ non sélectionnée'),
+                                content: const Text('Vous devez renseigner une adresse de départ.'),
+                                actions: <Widget>[
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop(); // Fermer la boîte de dialogue
+                                    },
+                                    child: const Text('Fermer'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        } else {
+                          Map<String, double> coordinates = await getCoordinates(addressStartPoint, useLoader: false);
+                          LatLng startPoint = LatLng(coordinates['latitude']!, coordinates['longitude']!);
+                          await fetchRoute(startPoint, endPoint);
+                          Navigator.of(context).pop(); // Fermer la boîte de dialogue après avoir terminé
+                        }
+                        break;
+                      case 3:
+                        debugPrint('Option 3 selected');
+                        Navigator.of(context).pop(); // Fermer la boîte de dialogue après avoir terminé
+                        break;
                     }
                   },
                   child: const Text('Choisir'),
                 ),
-
-
               ],
             );
           },
@@ -698,34 +728,40 @@ class MobileView {
     if (status == PermissionStatus.granted) {
       LatLng userLocation = await getCurrentLocation();
       await fetchRoute(userLocation, endPoint);
-      Navigator.of(context)
-          .pop(); // Fermer la boîte de dialogue si la permission est accordée
+      Navigator.of(context).pop();
     } else {
       showDialog(
         context: context,
         builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Permission Required'),
-            content: const Text('Vous devez accepter la localisation.'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // Fermer la boîte de dialogue
-                },
-                child: const Text('Fermer'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.of(context).pop(); // Fermer la boîte de dialogue
-                  await openAppSettings();
-                },
-                child: const Text('Autoriser la localisation'),
-              ),
-            ],
-          );
+          return buildShowPermissionDialog(context);
         },
       );
     }
+  }
+
+
+  Widget buildShowPermissionDialog(BuildContext context) {
+    return Expanded(
+      child :AlertDialog(
+      title: const Text('Permission requise ou activation de la localisation requise.'),
+      content: const Text('Vous devez accepter la localisation et / ou activer votre localisation.'),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text('Fermer'),
+        ),
+        TextButton(
+          onPressed: () async {
+            // Navigator.pop(context);
+            await openAppSettings();
+          },
+          child: const Text('Autoriser la localisation'),
+        ),
+      ],
+      ),
+    );
   }
 
   Widget buildButtonIncident(BuildContext context) {
@@ -770,14 +806,12 @@ class MobileView {
           initialCenter: currentPosition ?? points[0],
           initialZoom: 14,
           maxZoom: 20,
-          onTap: (_, __) {
+          onTap: (_, __) { // si on clique sur la map n'importe ou
             popupcontroller.hideAllPopups();
             FocusScope.of(context).unfocus();
-            setState(() {
-              shouldHideSize = true;
-            });
           },
         ),
+
         children: <Widget>[
           TileLayer(
             urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -840,49 +874,69 @@ class MobileView {
     );
   }
 
-  Future<void> checkPermission(Permission permission,
-      BuildContext context) async {
-    final status = await permission.request();
-    if (status.isGranted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Permission Granted'),
-        ),
-      );
-    } else if (status.isDenied) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Permission Denied'),
-        ),
-      );
-    } else if (status.isPermanentlyDenied) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Permission Permanently Denied'),
-        ),
-      );
-    }
 
-    void showLoadingDialog(BuildContext context) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        // Prevents the dialog from being dismissed by tapping outside of it
-        builder: (BuildContext context) {
-          return const AlertDialog(
-            content: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(width: 20),
-                Text("Chargement de la map"),
-              ],
+  Widget buildInternetDialog(BuildContext context) {
+    return Expanded(
+      child: Center(
+        child: AlertDialog(
+          content: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // CircularProgressIndicator(),
+              SizedBox(width: 20),
+              Text("Veuillez vous connecter à internet"),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                checkInternetConnection();
+              },
+              child: const Text("Réessayer"),
             ),
-          );
-        },
-      );
-    }
+          ],
+        ),
+      ),
+    );
   }
+
+
+
+  Widget buildLocationWarning() {
+    return GestureDetector(
+      onTap: openAppSettings,
+      child: Container(
+        width: double.infinity,
+        color: Colors.red,
+        padding: const EdgeInsets.all(8.0),
+        child: const Text(
+          "Vous n'avez pas activé ou autorisé la localisation sur votre appareil.",
+          style: TextStyle(color: Colors.white),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
+
+  Widget buildLoaderMyLoacalisation(BuildContext context) {
+    return const Expanded(
+      child: Center(
+        child: AlertDialog(
+          content: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 20),
+              Text("Chargement de votre localisation en cours..."),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
 
   Widget buildListAddressResult({
     required List<String> addressesModel,
@@ -903,10 +957,8 @@ class MobileView {
                 return ListTile(
                   title: Text(formattedAddress),
                   onTap: () async {
-                    setState(() {
-                      // isLoadingPage = true;
-                    });
                     try {
+
                       debugPrint('Getting coordinates for address: $address');
                       Map<String, double> coordinates = await getCoordinates(address);
                       LatLng endPoint = LatLng(coordinates['latitude']!, coordinates['longitude']!);
@@ -958,39 +1010,9 @@ class MobileView {
                   border: InputBorder.none,
                 ),
                 onSubmitted: (value) {
-                  setState(() {
-                    isLoading = true;
-                  });
-                  searchAddresses(value).then((addresses) async {
-                    if (addresses.isNotEmpty) {
-                      try {
-                        setState(() {
-                          shouldHideSize = true;
-                          addressesModel = addresses;
-                          isLoading = false;
-                        });
-                      } catch (error) {
-                        setState(() {
-                          shouldHideSize = false;
-                        });
-                        debugPrint('Error getting coordinates: $error');
-                      }
-                    } else {
-                      debugPrint('No addresses found');
-                      setState(() {
-                        addressesModel = addresses;
-                        isLoading = false;
-                        shouldHideSize = false;
-                      });
-                    }
-                  }).catchError((error) {
-                    setState(() {
-                      addressesModel = [];
-                      isLoading = false;
-                      shouldHideSize = false;
-                    });
-                    debugPrint('Error searching addresses: $error');
-                  });
+
+                  performSearch(value);
+
                 },
               ),
             ),
