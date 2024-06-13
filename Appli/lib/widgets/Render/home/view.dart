@@ -2,15 +2,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:skeletton_projet_velo/global.dart' as global;
 import 'package:skeletton_projet_velo/widgets/CustomWidget/CustomLoader/view_model.dart';
 import '../../../POO/IncidentType.dart';
-import '../../../POO/DangerType.dart';
-import 'view_model.dart';
+
 
 
 class MobileView {
@@ -20,7 +17,7 @@ class MobileView {
   List<LatLng> points;
   List<IncidentType> incidentsTypes;
   List<int> selectedIndices;
-  Function updateMarkersTag;
+  final void Function(List<int>) updateMarkersTag;
   Function searchAddresses;
   Function getCoordinates;
   Function formatAddress;
@@ -40,12 +37,16 @@ class MobileView {
   Function createDanger;
   Function addMarkerTest;
   Function generateTest;
-
-  //fonction de classe
-  bool isLoadingPage = false;
-  bool isLoading = false;
-  bool shouldHideSize = true;
-
+  LatLng? currentPosition;
+  bool internetLoading;
+  bool isLoading;
+  bool shouldHideSize;
+  Function performSearch;
+  Function checkInternetConnection;
+  bool hasUserLocation;
+  bool? hasLocalisationPermission;
+  bool isLoadingPage;
+  bool showAddress;
 
   MobileView({
     required this.context,
@@ -71,6 +72,16 @@ class MobileView {
     required this.startNavigation,
     required this.getDistance,
     required this.getIncidentCount,
+    required this.currentPosition,
+    required this.internetLoading,
+    required this.isLoading,
+    required this.shouldHideSize,
+    required this.performSearch,
+    required this.checkInternetConnection,
+    required this.hasUserLocation,
+    required this.hasLocalisationPermission,
+    required this.isLoadingPage,
+    required this.showAddress,
   });
 
   final TextStyle selectedTextStyle = const TextStyle(
@@ -91,272 +102,61 @@ class MobileView {
     mapController.move(point, 17);
   }
 
+
   render() {
     return StatefulBuilder(
       builder: (BuildContext context, StateSetter setState) {
-        return isLoadingPage
-            ? const CustomLoader()
-            : Scaffold(
+
+
+        return Scaffold(
           resizeToAvoidBottomInset: false,
-          floatingActionButton: Transform.scale(
-            scale: 1.3,
-            child: FloatingActionButton(
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30.0),
-              ),
-              onPressed: () {
-                showIncidentDialog(context);
-              },
-              child: Icon(
-                Icons.warning,
-                color: global.primary,
-                size: 35,
-              ),
-            ),
-          ),
+          floatingActionButton: buildButtonIncident(context),
           body: Stack(
             children: [
               const SizedBox(),
-              PopupScope(
-                popupController: popupcontroller,
-                child: FlutterMap(
-                  mapController: mapController,
-                  options: MapOptions(
-                    initialCenter: points[0],
-                    initialZoom: 14,
-                    maxZoom: 20,
-                    onTap: (_, __) {
-                      popupcontroller.hideAllPopups();
-                      FocusScope.of(context).unfocus();
-                      setState(() {
-                        shouldHideSize = true;
-                      });
-                    },
-                  ),
-                  children: <Widget>[
-                    TileLayer(
-                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    ),
-                    MarkerClusterLayerWidget(
-                      options: MarkerClusterLayerOptions(
-                        spiderfyCircleRadius: 80,
-                        spiderfySpiralDistanceMultiplier: 2,
-                        circleSpiralSwitchover: 12,
-                        maxClusterRadius: 120,
-                        rotate: true,
-                        size: const Size(40, 40),
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.all(50),
-                        maxZoom: 15,
-                        markers: markers,
-                        popupOptions: PopupOptions(
-                          popupSnap: PopupSnap.markerTop,
-                          popupController: popupcontroller,
-                          popupBuilder: (_, marker) => Container(
-                            width: 200,
-                            height: 100,
-                            color: Colors.white,
-                            child: GestureDetector(
-                              onTap: () => debugPrint('Popup tap!'),
-                              child: const Text(
-                                'Le nom du POI',
-                              ),
-                            ),
-                          ),
-                        ),
-                        builder: (context, markers) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              color: global.primary,
-                            ),
-                            child: Center(
-                              child: Text(
-                                markers.length.toString(),
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    PolylineLayer(
-                      polylines: [
-                        Polyline(
-                          points: routePoints,
-                          strokeWidth: 4.0,
-                          color: Colors.blue,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+
+              buildMapWidget(
+                popupcontroller: popupcontroller,
+                mapController: mapController,
+                currentPosition: currentPosition,
+                points: points,
+                markers: markers,
+                routePoints: routePoints,
+                context: context,
+                shouldHideSize: shouldHideSize,
+                setState: setState,
               ),
+
               Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            margin: const EdgeInsets.only(right: 15, left: 4.0),
-                            padding: const EdgeInsets.all(8.0),
-                            decoration: BoxDecoration(
-                              color: global.primary,
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: const Icon(
-                              Icons.search,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Expanded(
-                            child: TextField(
-                              decoration: const InputDecoration(
-                                hintText: 'Rechercher un lieu ',
-                                hintStyle: TextStyle(
-                                  color: Colors.grey,
-                                ),
-                                border: InputBorder.none,
-                              ),
-                              onSubmitted: (value) {
-                                setState(() {
-                                  isLoading = true;
-                                });
-                                searchAddresses(value).then((addresses) async {
-                                  if (addresses.isNotEmpty) {
-                                    try {
-                                      setState(() {
-                                        shouldHideSize = true;
-                                        addressesModel = addresses;
-                                        isLoading = false;
-                                      });
-                                    } catch (error) {
-                                      setState(() {
-                                        shouldHideSize = false;
-                                      });
-                                      debugPrint('Error getting coordinates: $error');
-                                    }
-                                  } else {
-                                    debugPrint('No addresses found');
-                                    setState(() {
-                                      addressesModel = addresses;
-                                      isLoading = false;
-                                      shouldHideSize = false;
-                                    });
-                                  }
-                                }).catchError((error) {
-                                  setState(() {
-                                    addressesModel = [];
-                                    isLoading = false;
-                                    shouldHideSize = false;
-                                  });
-                                  debugPrint('Error searching addresses: $error');
-                                });
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  // Display the message if location permission is not granted
+                  hasLocalisationPermission != null && !hasLocalisationPermission!
+                      ? buildLocationWarning() : Container(),
+                  buildInputSearch(context, setState),
                   isLoading
-                      ? Container(
-                    color: Colors.white,
-                    margin: const EdgeInsets.all(8.0),
-                    child: loaderInSizedBox(),
+                      ? loaderInSizedBox()
+                      : addressesModel.isNotEmpty && showAddress
+                      ? buildListAddressResult(
+                    addressesModel: addressesModel,
+                    context: context,
+                    setState: setState,
                   )
-                      : addressesModel.isNotEmpty
-                      ? IntrinsicHeight(
-                    child: Container(
-                      color: Colors.white,
-                      margin: const EdgeInsets.all(8.0),
-                      child: SingleChildScrollView(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: addressesModel.map<Widget>((address) {
-                              String formattedAddress = formatAddress(address);
-                              return ListTile(
-                                title: Text(formattedAddress),
-                                onTap: () async {
-                                  setState(() {
-                                    // isLoadingPage = true;
-                                  });
-                                  try {
-                                    debugPrint('Getting coordinates for address: $address');
-                                    Map<String, double> coordinates = await getCoordinates(address);
-                                    LatLng endPoint = LatLng(coordinates['latitude']!, coordinates['longitude']!);
-                                    moveCamera(endPoint);
-                                    showPopupWithSimpleRadioChoose(context, endPoint, setState);
-                                  } catch (error) {
-                                    debugPrint('Error getting coordinates: $error');
-                                  }
-                                },
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                      : hideSizedBox(shouldHideSize),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-                    child: SizedBox(
-                      height: 50,
-                      child: ListView.builder(
-                        itemCount: incidentsTypes.length,
-                        scrollDirection: Axis.horizontal,
-                        itemBuilder: (BuildContext context, int index) {
-                          final incidentType = incidentsTypes[index];
-                          return Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  if (selectedIndices.contains(index)) {
-                                    selectedIndices.remove(index);
-                                  } else {
-                                    selectedIndices.add(index);
-                                  }
-                                  updateMarkersTag(selectedIndices);
-                                });
-                              },
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: selectedIndices.contains(index) ? global.secondary : Colors.white,
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      incidentType.icon,
-                                      color: selectedIndices.contains(index) ? Colors.white : global.secondary,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      incidentType.name,
-                                      style: selectedIndices.contains(index) ? selectedTextStyle : unselectedTextStyle,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                      :  !showAddress ? hideSizedBox(shouldHideSize) : Container(),
+                  buildTagList(
+                    incidentsTypes: incidentsTypes,
+                    selectedIndices: selectedIndices,
+                    setState: setState,
+                    context: context,
+                    updateMarkersTag: updateMarkersTag,
+                    selectedTextStyle: selectedTextStyle,
+                    unselectedTextStyle: unselectedTextStyle,
                   ),
+                  internetLoading
+                      ? buildInternetDialog(context)
+                      : !hasUserLocation && hasLocalisationPermission != null && hasLocalisationPermission!  && !internetLoading
+                      ? buildLoaderMyLoacalisation(context)
+                      : Container(),
+                  if(isLoadingPage) Expanded(child :loaderInSizedBox(size: 50),),
                 ],
               ),
             ],
@@ -364,11 +164,12 @@ class MobileView {
         );
       },
     );
-
   }
 
+
+
   loaderInSizedBox({double size = 100}) {
-    return  SizedBox(
+    return SizedBox(
       height: size,
       width: size,
       child: const Center(
@@ -380,9 +181,9 @@ class MobileView {
   Widget hideSizedBox(bool shouldHideSize, { bool isInPopup = false}) {
     return shouldHideSize
         ? Container(
-        color: isInPopup ?  Colors.transparent: Colors.white,
+        color: isInPopup ? Colors.transparent : Colors.white,
         margin: isInPopup ? const EdgeInsets.all(0) : const EdgeInsets.all(8.0),
-        child : const SizedBox()
+        child: const SizedBox()
     )
 
         : Container(
@@ -398,8 +199,8 @@ class MobileView {
         ),
       ),
     );
-
   }
+
   void showIncidentDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -572,7 +373,11 @@ class MobileView {
             int selectedOption = 0;
             TextEditingController addressController = TextEditingController();
             String? _selectedFavoriteAddress;
-            List<String> _favoriteAddresses = ['Adresse 1', 'Adresse 2', 'Adresse 3'];
+            List<String> _favoriteAddresses = [
+              'Adresse 1',
+              'Adresse 2',
+              'Adresse 3'
+            ];
 
             return AlertDialog(
               title: const Text(
@@ -678,8 +483,8 @@ class MobileView {
     );
   }
 
-  void showPopupWithSimpleRadioChoose(BuildContext context, LatLng endPoint, void Function(void Function()) setState) {
-
+  void showPopupWithSimpleRadioChoose(BuildContext context, LatLng endPoint,
+      void Function(void Function()) setState) {
     int? selectedOption; // Variable pour stocker la valeur sélectionnée
     String address = '';
     bool isLoadingPopUp = false;
@@ -687,10 +492,7 @@ class MobileView {
     String addressStartPoint = '';
     String? selectedFavoriteAddress;
     List<String> favoriteAddresses = ['Adresse 1', 'Adresse 2', 'Adresse 3'];
-    setState(() {
-      isLoadingPage = false;
-    });
-    
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -703,13 +505,15 @@ class MobileView {
               ),
               content: SizedBox(
                 width: 400,
-                height: 200,
+                height: 300,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     RadioListTile<int>(
-                      title: const Text('Ma localisation'), // Texte de la première option
-                      value: 1, // Valeur associée à la première option
+                      title: const Text('Ma localisation'),
+                      // Texte de la première option
+                      value: 1,
+                      // Valeur associée à la première option
                       groupValue: selectedOption,
                       onChanged: (int? value) {
                         setState(() {
@@ -738,7 +542,8 @@ class MobileView {
                           setState(() {
                             isLoadingPopUp = true;
                           });
-                          searchAddresses(value).then((addresses) async {
+
+                          searchAddresses(value, useLoader: false, showAddressOnHome : false).then((addresses) {
                             if (addresses.isNotEmpty) {
                               try {
                                 setState(() {
@@ -780,46 +585,47 @@ class MobileView {
                         });
                       },
                     ),
-                    isLoadingPopUp
-                        ? Container(
-                            color: Colors.transparent,
-                            child: loaderInSizedBox(size: 20))
-                        : address.isNotEmpty
-                            ? IntrinsicHeight(
-                                child: Container(
-                                  color: Colors.transparent,
-                                  child: SingleChildScrollView(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      children: [
-                                        Builder(
-                                          builder: (context) {
-                                            String formattedAddress =
-                                                formatAddress(address);
-                                            return ListTile(
-                                              title: Text(formattedAddress),
-                                              onTap: () async {
-                                                try {
-                                                  setState(() {
-                                                    inputText = formattedAddress;
-                                                    addressStartPoint = address;
-                                                    address = '';
-                                                  });
-                                                } catch (error) {
-                                                  debugPrint(
-                                                      'Error getting coordinates: $error');
-                                                }
-                                              },
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              )
-                            : hideSizedBox(shouldHideSize, isInPopup: true),
+                    isLoadingPopUp ?
+                    Container(
+                        color: Colors.transparent,
+                        child: loaderInSizedBox(size: 20)
+                    ) :
+                    address.isNotEmpty ? IntrinsicHeight(
+                      child: Container(
+                        color: Colors.transparent,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Utiliser une variable pour le formattedAddress
+                              Builder(
+                                builder: (context) {
+                                  String formattedAddress = formatAddress(
+                                      address);
+                                  return ListTile(
+                                    title: Text(formattedAddress),
+                                    onTap: () async {
+                                      try {
+                                        setState(() {
+                                          inputText = formattedAddress;
+                                          addressStartPoint = address;
+                                          address = '';
+                                        });
+                                      } catch (error) {
+                                        debugPrint(
+                                            'Error getting coordinates: $error');
+                                      }
+                                    },
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                        : hideSizedBox(shouldHideSize, isInPopup: true),
+                    // hideSizedBox(shouldHideSize, isInPopup: true),
                     RadioListTile<int>(
                       title: DropdownButton<String>(
                         value: selectedFavoriteAddress,
@@ -858,7 +664,8 @@ class MobileView {
                       if (selectedOption != null) {
                         switch (selectedOption) {
                           case 1:
-                            checkPermissionAndFetchLocation(context);
+                            checkPermissionAndFetchLocation(context, endPoint);
+                            Navigator.of(context).pop();
 
                             double distance = getDistance();
                             int incidentCount = getIncidentCount();
@@ -892,7 +699,7 @@ class MobileView {
                             } else {
                               debugPrint('Start with address: $addressStartPoint');
                               Map<String, double> coordinates =
-                                  await getCoordinates(addressStartPoint);
+                              await getCoordinates(addressStartPoint);
                               LatLng startPoint = LatLng(
                                   coordinates['latitude']!,
                                   coordinates['longitude']!);
@@ -914,10 +721,10 @@ class MobileView {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: global.secondary,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(double.infinity, 36),
-                      padding: const EdgeInsets.symmetric(vertical: 16)),
+                        backgroundColor: global.secondary,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 36),
+                        padding: const EdgeInsets.symmetric(vertical: 16)),
                     child: const Text(
                       'CHOISIR',
                       style: TextStyle(
@@ -1022,15 +829,20 @@ class MobileView {
     );
   }
 
-  Future<void> checkPermissionAndFetchLocation(BuildContext context) async {
+  Future<void> checkPermissionAndFetchLocation(BuildContext context,
+      LatLng endPoint) async {
     PermissionStatus status = await Permission.location.request();
     if (status == PermissionStatus.granted) {
       LatLng userLocation = await getCurrentLocation();
-      await fetchRoute(userLocation, points.first);
-      debugPrint('Start with my localisation');
-      Navigator.of(context).pop(); // Fermer la boîte de dialogue si la permission est accordée
+      await fetchRoute(userLocation, endPoint);
+      Navigator.of(context).pop();
     } else {
-      showLocalisationPermissionDialog(context);
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return buildShowPermissionDialog(context);
+        },
+      );
     }
   }
 
@@ -1049,28 +861,355 @@ class MobileView {
     }
   }
 
-  Future<void> checkPermission(Permission permission, BuildContext context) async {
-    final status = await permission.request();
-    if (status.isGranted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Permission Granted'),
+  Widget buildShowPermissionDialog(BuildContext context) {
+    return Expanded(
+      child :AlertDialog(
+      title: const Text('Permission requise ou activation de la localisation requise.'),
+      content: const Text('Vous devez accepter la localisation et / ou activer votre localisation.'),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text('Fermer'),
         ),
-      );
-    } else if (status.isDenied) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Permission Denied'),
+        TextButton(
+          onPressed: () async {
+            // Navigator.pop(context);
+            await openAppSettings();
+          },
+          child: const Text('Autoriser la localisation'),
         ),
-      );
-    } else if (status.isPermanentlyDenied) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Permission Permanently Denied'),
-        ),
-      );
-    }
+      ],
+      ),
+    );
   }
+
+  Widget buildButtonIncident(BuildContext context) {
+    return Transform.scale(
+      scale: 1.3,
+      child: FloatingActionButton(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30.0),
+        ),
+        onPressed: () {
+          showIncidentDialog(context);
+        },
+        child: Icon(
+          Icons.warning,
+          color: global.primary,
+          size: 35,
+        ),
+      ),
+    );
+  }
+
+
+
+
+  Widget buildMapWidget({
+    required PopupController popupcontroller,
+    required MapController mapController,
+    required LatLng? currentPosition,
+    required List<LatLng> points,
+    required List<Marker> markers,
+    required List<LatLng> routePoints,
+    required BuildContext context,
+    required bool shouldHideSize,
+    required StateSetter setState
+  }) {
+    return PopupScope(
+      popupController: popupcontroller,
+      child: FlutterMap(
+        mapController: mapController,
+        options: MapOptions(
+          initialCenter: currentPosition ?? points[0],
+          initialZoom: 14,
+          maxZoom: 20,
+          onTap: (_, __) { // si on clique sur la map n'importe ou
+            popupcontroller.hideAllPopups();
+            FocusScope.of(context).unfocus();
+          },
+        ),
+
+        children: <Widget>[
+          TileLayer(
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          ),
+          MarkerClusterLayerWidget(
+            options: MarkerClusterLayerOptions(
+              spiderfyCircleRadius: 80,
+              spiderfySpiralDistanceMultiplier: 2,
+              circleSpiralSwitchover: 12,
+              maxClusterRadius: 120,
+              rotate: true,
+              size: const Size(40, 40),
+              alignment: Alignment.center,
+              padding: const EdgeInsets.all(50),
+              maxZoom: 15,
+              markers: markers,
+              popupOptions: PopupOptions(
+                popupSnap: PopupSnap.markerTop,
+                popupController: popupcontroller,
+                popupBuilder: (_, marker) =>
+                    Container(
+                      width: 200,
+                      height: 100,
+                      color: Colors.white,
+                      child: GestureDetector(
+                        onTap: () => debugPrint('Popup tap!'),
+                        child: const Text(
+                          'Le nom du POI',
+                        ),
+                      ),
+                    ),
+              ),
+              builder: (context, markers) {
+                return Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: global.primary,
+                  ),
+                  child: Center(
+                    child: Text(
+                      markers.length.toString(),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          PolylineLayer(
+            polylines: [
+              Polyline(
+                points: routePoints,
+                strokeWidth: 4.0,
+                color: Colors.blue,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget buildInternetDialog(BuildContext context) {
+    return Expanded(
+      child: Center(
+        child: AlertDialog(
+          content: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // CircularProgressIndicator(),
+              SizedBox(width: 20),
+              Text("Veuillez vous connecter à internet"),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                checkInternetConnection();
+              },
+              child: const Text("Réessayer"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+
+  Widget buildLocationWarning() {
+    return GestureDetector(
+      onTap: openAppSettings,
+      child: Container(
+        width: double.infinity,
+        color: Colors.red,
+        padding: const EdgeInsets.all(8.0),
+        child: const Text(
+          "Vous n'avez pas activé ou autorisé la localisation sur votre appareil.",
+          style: TextStyle(color: Colors.white),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
+
+  Widget buildLoaderMyLoacalisation(BuildContext context) {
+    return const Expanded(
+      child: Center(
+        child: AlertDialog(
+          content: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 20),
+              Text("Chargement de votre localisation en cours..."),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
+
+  Widget buildListAddressResult({
+    required List<String> addressesModel,
+    required BuildContext context,
+    required Function(void Function()) setState,
+  }) {
+    return IntrinsicHeight(
+      child: Container(
+        color: Colors.white,
+        margin: const EdgeInsets.all(8.0),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: addressesModel.map<Widget>((address) {
+                String formattedAddress = formatAddress(address);
+                return ListTile(
+                  title: Text(formattedAddress),
+                  onTap: () async {
+                    try {
+
+                      debugPrint('Getting coordinates for address: $address');
+                      Map<String, double> coordinates = await getCoordinates(address);
+                      LatLng endPoint = LatLng(coordinates['latitude']!, coordinates['longitude']!);
+                      showPopupWithSimpleRadioChoose(context, endPoint, setState);
+                    } catch (error) {
+                      debugPrint('Error getting coordinates: $error');
+                    }
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+
+
+  Widget buildInputSearch(BuildContext context, Function(void Function()) setState) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: Row(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(right: 15, left: 4.0),
+              padding: const EdgeInsets.all(8.0),
+              decoration: BoxDecoration(
+                color: global.primary,
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: const Icon(
+                Icons.search,
+                color: Colors.white,
+              ),
+            ),
+            Expanded(
+              child: TextField(
+                decoration: const InputDecoration(
+                  hintText: 'Rechercher un lieu ',
+                  hintStyle: TextStyle(
+                    color: Colors.grey,
+                  ),
+                  border: InputBorder.none,
+                ),
+                onSubmitted: (value) {
+
+                  performSearch(value);
+
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildTagList({
+    required List<IncidentType> incidentsTypes,
+    required List<int> selectedIndices,
+    required Function(void Function()) setState,
+    required BuildContext context,
+    required void Function(List<int>) updateMarkersTag,
+    required TextStyle selectedTextStyle,
+    required TextStyle unselectedTextStyle,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+      child: SizedBox(
+        height: 50,
+        child: ListView.builder(
+          itemCount: incidentsTypes.length,
+          scrollDirection: Axis.horizontal,
+          itemBuilder: (BuildContext context, int index) {
+            final incidentType = incidentsTypes[index];
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    if (selectedIndices.contains(index)) {
+                      selectedIndices.remove(index);
+                    } else {
+                      selectedIndices.add(index);
+                    }
+                    updateMarkersTag(selectedIndices);
+                  });
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: selectedIndices.contains(index)
+                        ? global.secondary
+                        : Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        incidentType.icon,
+                        color: selectedIndices.contains(index)
+                            ? Colors.white
+                            : global.secondary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        incidentType.name,
+                        style: selectedIndices.contains(index)
+                            ? selectedTextStyle
+                            : unselectedTextStyle,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+
 }
 
 

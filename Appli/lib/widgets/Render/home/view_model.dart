@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -11,10 +12,15 @@ import '../../../POO/DangerType.dart';
 import 'view.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:skeletton_projet_velo/global.dart' as global;
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_compass/flutter_compass.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:skeletton_projet_velo/global.dart' as global;
+
+
+
 
 
 class Home extends StatefulWidget {
@@ -29,6 +35,15 @@ class Home extends StatefulWidget {
 class MapState extends State<Home> {
   final PopupController _popupController = PopupController();
   final MapController _mapController = MapController();
+  Marker? _userMarker;
+
+  late StreamSubscription<Position> _positionStreamSubscription;
+  late StreamSubscription<CompassEvent> _compassStreamSubscription;
+
+  LatLng? _currentPosition;
+  double _currentHeading = 0.0;
+
+
   List<Incident> incidents = [];
   List<Marker> markers= [];
 
@@ -47,9 +62,19 @@ class MapState extends State<Home> {
   List<LatLng> routePoints = [];
   Map<Permission, PermissionStatus> _permissionStatus = {};
 
+  bool internetLoading = true;
+  bool isLoading = false;
+  bool isLoadingPage = false;
+  bool hasUserLocation = false;
+  bool showAddress = true;
+  bool? hasLocalisationPermission;
+
+
 
   @override
   void dispose() {
+    _positionStreamSubscription.cancel();
+    _compassStreamSubscription.cancel();
     super.dispose();
   }
 
@@ -57,7 +82,11 @@ class MapState extends State<Home> {
 
   @override
   void initState() {
-    _getPermissionStatus();
+
+    checkInternetConnection();
+    _determinePosition();
+    _startCompassAndLocalisationStream();
+
     incidents = generateRandomIncidents(0);
     markers = filterIncidentsBySelectedTypes(incidents)
         .map<Marker>(
@@ -92,16 +121,23 @@ class MapState extends State<Home> {
       fetchRoute: _fetchRoute,
       startNavigation: _startNavigation,
       routePoints: routePoints,
-
-      // addIncidentMarker: addIncidentMarker,
       getCurrentLocation: _getCurrentLocation,
       permissionStatus: _permissionStatus,
       generateTest: generateTest,
       createDanger: createDanger,
       addMarkerTest: addMarkerTest,
-
       getDistance: getDistance,
       getIncidentCount: getIncidentCount,
+      currentPosition: _currentPosition,
+      internetLoading: internetLoading,
+      isLoading: isLoading,
+      shouldHideSize: shouldHideSize,
+      performSearch: performSearch,
+      checkInternetConnection: checkInternetConnection,
+      hasUserLocation: hasUserLocation,
+      hasLocalisationPermission: hasLocalisationPermission,
+      isLoadingPage: isLoadingPage,
+      showAddress: showAddress,
     );
     return currentView.render();
   }
@@ -110,10 +146,8 @@ class MapState extends State<Home> {
   LatLng generateRandomCoordinates() {
     final random = Random();
     const dijonCenter = LatLng(47.322047, 5.041480);
-
     final lat = random.nextDouble() * 0.05 - 0.025 + dijonCenter.latitude;
     final lng = random.nextDouble() * 0.05 - 0.025 + dijonCenter.longitude;
-
     return LatLng(lat, lng);
   }
   
@@ -161,8 +195,6 @@ class MapState extends State<Home> {
     return filteredIncidents;
   }
 
-
-
   void addMarker(LatLng point) {
     Marker marker = Marker(
       point: point,
@@ -177,6 +209,38 @@ class MapState extends State<Home> {
       markers = newMarkers;
     });
   }
+
+  void updateMarkerUser(LatLng point, double heading, {bool withMoveCamera = false}) {
+    double mapRotation = _mapController.camera.rotation;
+    Marker newMarker = Marker(
+      width: 80.0,
+      height: 80.0,
+      point: point,
+      rotate: false,
+      child: Transform.rotate(
+        angle: (heading + mapRotation) * (3.1415926535897932 / 180),
+        child: const Icon(
+          Icons.navigation,
+          color: Colors.blue,
+          size: 40,
+        ),
+      ),
+    );
+
+    setState(() {
+      if (_userMarker != null) {
+        markers.remove(_userMarker);
+      }
+      markers.add(newMarker);
+      _userMarker = newMarker;
+      markers = List.from(markers);
+      if (withMoveCamera) {
+        _mapController.move(point, _mapController.camera.zoom);
+      }
+
+    });
+  }
+
 
   void addMarkerTest(LatLng point, String incidentName) async {
 
@@ -354,7 +418,33 @@ class MapState extends State<Home> {
     });
   }
 
-  Future<List<String>> searchAddresses(String query) async {
+  Future<void> performSearch(String query) async {
+    isLoading = true;
+    try {
+      final addressesFuntion = await searchAddresses(query);
+      if (addresses.isNotEmpty) {
+        debugPrint('Address found');
+      } else {
+        debugPrint('No addresses found');
+        addresses = addressesFuntion;
+        shouldHideSize = false;
+      }
+    } catch (error) {
+      addresses = [];
+      shouldHideSize = false;
+      debugPrint('Error searching addresses: $error');
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  Future<List<String>> searchAddresses(String query, {bool useLoader = true,  bool showAddressOnHome = true}) async {
+    if(useLoader) isLoading =true;
+    if (showAddressOnHome) {
+      setState(() {
+      showAddress = true;
+    });
+    }
     final response = await http.get(Uri.parse('https://nominatim.openstreetmap.org/search?q=$query&countrycodes=fr&format=json'));
 
     if (response.statusCode == 200) {
@@ -365,13 +455,24 @@ class MapState extends State<Home> {
           .map<String>((e) => e['display_name'] as String)
           .where((address) => address.contains('21000'))
           .toList();
+      debugPrint('Found ${places.length} places for query $query');
+
+      if (places.isNotEmpty){
+        shouldHideSize = true;
+      }else {
+        addresses = [];
+        showAddress = false;
+      }
       return places;
     } else {
+      addresses = [];
       throw Exception('Failed to search addresses');
     }
   }
 
-  Future<Map<String, double>> getCoordinates(String address) async {
+  Future<Map<String, double>> getCoordinates(String address, {bool useLoader = true}) async {
+    debugPrint('useLoader : $useLoader');
+    if (useLoader) setState(() {isLoadingPage = true;});
     final response = await http.get(Uri.parse('https://nominatim.openstreetmap.org/search?format=json&q=$address'));
 
     if (response.statusCode == 200) {
@@ -380,6 +481,8 @@ class MapState extends State<Home> {
         final Map<String, dynamic> firstResult = data.first;
         final double lat = double.parse(firstResult['lat']);
         final double lon = double.parse(firstResult['lon']);
+        if (useLoader) setState(() {isLoadingPage = false;});
+        showAddress = false;
         return {'latitude': lat, 'longitude': lon};
       } else {
         throw Exception('No results found for the address');
@@ -468,8 +571,8 @@ class MapState extends State<Home> {
         _incidentCount = incidentCount;
 
         addMarker(endRoute);
+        _mapController.fitBounds(LatLngBounds.fromPoints([startRoute, endRoute]));   //zoom bon pour tout voir
         isNavigating = true;
-        _startNavigation();
       });
 
     } else {
@@ -494,7 +597,6 @@ class MapState extends State<Home> {
   }
 
   Future<String> _getUserCurrentAddress() async {
-    // Récupérer la position actuelle de l'utilisateur
     Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
 
     // Convertir la position en une adresse lisible
@@ -505,17 +607,6 @@ class MapState extends State<Home> {
     return '${placemark.thoroughfare}, ${placemark.subLocality}, ${placemark.locality}, ${placemark.administrativeArea}, ${placemark.postalCode}, ${placemark.country}';
   }
 
-
-
-  Future<void> _getPermissionStatus() async {
-    Map<Permission, PermissionStatus> permissionStatus = await [
-      Permission.location,
-    ].request();
-    setState(() {
-      _permissionStatus = permissionStatus;
-    });
-  }
-
   Future<LatLng> _getCurrentLocation() async {
     Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
@@ -523,5 +614,113 @@ class MapState extends State<Home> {
     LatLng currentPosition = LatLng(position.latitude, position.longitude);
     return currentPosition;
   }
+
+  void _onCompassData(CompassEvent event) {
+    if (event.heading != null) {
+      setState(() {
+        _currentHeading = event.heading!;
+        if (_currentPosition != null){
+          if (hasUserLocation == false){
+            setState(() {
+              debugPrint('User location found');
+              hasUserLocation = true;
+            });
+          }
+          updateMarkerUser(_currentPosition!, _currentHeading);
+        }
+      });
+    }
+  }
+
+  void _startCompassAndLocalisationStream() {
+    _compassStreamSubscription = FlutterCompass.events!.listen(_onCompassData);
+    _positionStreamSubscription = Geolocator.getPositionStream().listen((Position position) {
+      setState(() {
+        _currentPosition = LatLng(position.latitude, position.longitude);
+        if (_currentPosition != null){
+          if (hasUserLocation == false){
+            setState(() {
+              hasUserLocation = true;
+            });
+          }
+          updateMarkerUser(_currentPosition!, _currentHeading);
+        }
+      });
+    });
+  }
+// Function to check if location services are enabled
+  Future<bool> _checkLocationService() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      setState(() {
+        hasUserLocation = false;
+      });
+      throw Exception('Location services are disabled.');
+    }
+    return true;
+  }
+
+  Future<void> _checkLocationPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        setState(() {
+          hasLocalisationPermission = false;
+          hasUserLocation = false;
+        });
+        throw Exception('Location permissions are denied.');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      setState(() {
+        hasUserLocation = false;
+        hasLocalisationPermission = false;
+      });
+      throw Exception('Location permissions are permanently denied.');
+    }
+
+    if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+      setState(() {
+        hasLocalisationPermission = true;
+      });
+    }
+  }
+
+  Future<void> _determinePosition() async {
+    try {
+      await _checkLocationService();
+      await _checkLocationPermission();
+
+      Position position = await Geolocator.getCurrentPosition();
+
+      setState(() {
+        hasUserLocation = true;
+        _currentPosition = LatLng(position.latitude, position.longitude);
+      });
+    } catch (e) {
+      print('Error while determining position: $e');
+    }
+  }
+
+
+
+  Future<void> checkInternetConnection() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    debugPrint(' conectivity result : ${connectivityResult.toString()}');
+
+    if (connectivityResult.toString() == "ConnectivityResult.none") {
+      setState(() {
+        internetLoading = true;
+      });
+    } else {
+      setState(() {
+        internetLoading = false;
+      });
+    }
+  }
+
 
 }
