@@ -7,12 +7,16 @@ class MobileView {
   BuildContext context;
   bool isLoading;
   List<FavAddressInfo> favAddressList;
+  Function getTexteTest;
+  String text;
   
 
   MobileView({
     required this.context,
     required this.isLoading,
-    required this.favAddressList
+    required this.favAddressList,
+    required this.getTexteTest,
+    required this.text
   });
 
   render() {
@@ -41,6 +45,7 @@ class MobileView {
                 ],
               ),
               const SizedBox(height: 20),
+              Text(text),
               Expanded(
                 child: ListView(
                   children: [
@@ -103,7 +108,7 @@ class MobileView {
               CustomButton(
                 text: 'AFFICHER SUR LA CARTE',
                 callbackFunction: ()  {
-        
+                  getTexteTest();
                 },
                 height: 40,
                 width: double.infinity,

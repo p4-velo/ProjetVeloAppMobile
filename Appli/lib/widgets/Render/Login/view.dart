@@ -18,10 +18,10 @@ class MobileView {
       builder: (BuildContext context, BoxConstraints constraints) {
         return Scaffold(
           backgroundColor: global.secondary,
-          body: Padding(
-            padding: const EdgeInsets.all(30),
-            child: Center(
-              child: SingleChildScrollView(
+          body: Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(30),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
