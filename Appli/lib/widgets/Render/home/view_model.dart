@@ -119,7 +119,7 @@ class MapState extends State<Home> {
       mapController: _mapController,
       addMarker: addMarker,
       fetchRoute: _fetchRoute,
-      startNavigation: _startNavigation,
+      navigation: _navigation,
       routePoints: routePoints,
       getCurrentLocation: _getCurrentLocation,
       permissionStatus: _permissionStatus,
@@ -138,6 +138,8 @@ class MapState extends State<Home> {
       hasLocalisationPermission: hasLocalisationPermission,
       isLoadingPage: isLoadingPage,
       showAddress: showAddress,
+      isNavigating: isNavigating,
+
     );
     return currentView.render();
   }
@@ -588,24 +590,13 @@ class MapState extends State<Home> {
     return _incidentCount;
   }
 
-  void _startNavigation() async {
-    for (var point in routePoints) {
-      if (!isNavigating) break;
-      _mapController.move(point, 18.0);
-      // await Future.delayed(Duration(seconds: 2));
-    }
+  void _navigation(bool navigation) async {
+    setState(() {
+      isNavigating = navigation;
+    });
   }
 
-  Future<String> _getUserCurrentAddress() async {
-    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
 
-    // Convertir la position en une adresse lisible
-    List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
-    Placemark placemark = placemarks[0];
-
-    // Retourner l'adresse complète
-    return '${placemark.thoroughfare}, ${placemark.subLocality}, ${placemark.locality}, ${placemark.administrativeArea}, ${placemark.postalCode}, ${placemark.country}';
-  }
 
   Future<LatLng> _getCurrentLocation() async {
     Position position = await Geolocator.getCurrentPosition(
@@ -627,6 +618,9 @@ class MapState extends State<Home> {
             });
           }
           updateMarkerUser(_currentPosition!, _currentHeading);
+          if (isNavigating){
+            _updateMapPosition();
+          }
         }
       });
     }
@@ -639,15 +633,27 @@ class MapState extends State<Home> {
         _currentPosition = LatLng(position.latitude, position.longitude);
         if (_currentPosition != null){
           if (hasUserLocation == false){
-            setState(() {
-              hasUserLocation = true;
-            });
+            hasUserLocation = true;
           }
-          updateMarkerUser(_currentPosition!, _currentHeading);
         }
       });
     });
+    if (isNavigating){
+      _updateMapPosition();
+    }
   }
+
+  void _updateMapPosition() {
+    if (_currentPosition != null) {
+      _mapController.move(_currentPosition!, 18.0);
+      _mapController.rotate(-_currentHeading);
+    }
+    if (isNavigating){
+      _updateMapPosition();
+    }
+  }
+
+
 // Function to check if location services are enabled
   Future<bool> _checkLocationService() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();

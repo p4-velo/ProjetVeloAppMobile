@@ -25,7 +25,7 @@ class MobileView {
   MapController mapController;
   Function addMarker;
   Function fetchRoute;
-  Function startNavigation;
+  Function navigation;
 
   Function getDistance;
   Function getIncidentCount;
@@ -47,6 +47,7 @@ class MobileView {
   bool? hasLocalisationPermission;
   bool isLoadingPage;
   bool showAddress;
+  bool isNavigating;
 
   MobileView({
     required this.context,
@@ -69,7 +70,7 @@ class MobileView {
     required this.generateTest,
     required this.createDanger,
     required this.addMarkerTest,
-    required this.startNavigation,
+    required this.navigation,
     required this.getDistance,
     required this.getIncidentCount,
     required this.currentPosition,
@@ -82,6 +83,7 @@ class MobileView {
     required this.hasLocalisationPermission,
     required this.isLoadingPage,
     required this.showAddress,
+    required this.isNavigating,
   });
 
   final TextStyle selectedTextStyle = const TextStyle(
@@ -110,7 +112,7 @@ class MobileView {
 
         return Scaffold(
           resizeToAvoidBottomInset: false,
-          floatingActionButton: buildButtonIncident(context),
+          floatingActionButton: buildFloatingButtons(context, isNavigating),
           body: Stack(
             children: [
               const SizedBox(),
@@ -794,29 +796,33 @@ class MobileView {
                     backgroundColor: global.tertiary,
                     foregroundColor: Colors.white,
                     minimumSize: const Size(150, 36),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 12), // Réduit le padding vertical
                   ),
                   child: const Text(
-                    'ANNULER',
+                    'Voir le trajet',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                     ),
                   ),
                 ),
+
+                const SizedBox(width: 16), // Ajoute un espace de 16 pixels entre les boutons
+
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).pop();
+                    navigation(true);
                   },
                   style: TextButton.styleFrom(
                     backgroundColor: global.secondary,
                     foregroundColor: Colors.white,
                     minimumSize: const Size(150, 36),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 12), // Réduit le padding vertical
                   ),
                   child: const Text(
-                    'OK !',
+                    'Lancer navigation !',
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -905,7 +911,38 @@ class MobileView {
     );
   }
 
+  Widget buildButtonStartAndStopNavigation(BuildContext context, bool isNavigating) {
+    return Transform.scale(
+      scale: 1.3,
+      child: FloatingActionButton(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30.0),
+        ),
+        onPressed: () {
+          navigation(false);
 
+        },
+        child: Icon(
+          Icons.stop,
+          color: global.primary,
+          size: 35,
+        ),
+      ),
+    );
+  }
+
+
+  Widget buildFloatingButtons(BuildContext context, bool isNavigating) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (isNavigating) buildButtonStartAndStopNavigation(context, isNavigating),
+        if (isNavigating) const SizedBox(height: 50),
+        buildButtonIncident(context),
+      ],
+    );
+  }
 
 
   Widget buildMapWidget({
