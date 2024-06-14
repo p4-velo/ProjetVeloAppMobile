@@ -425,6 +425,7 @@ class MapState extends State<Home> {
     try {
       final addressesFuntion = await searchAddresses(query);
       if (addresses.isNotEmpty) {
+        addresses = addressesFuntion;
         debugPrint('Address found');
       } else {
         debugPrint('No addresses found');
@@ -555,7 +556,6 @@ class MapState extends State<Home> {
   int _incidentCount = 0;
 
   Future<void> _fetchRoute(LatLng startRoute, LatLng endRoute ) async {
-    debugPrint('Fetching route from $startRoute to $endRoute');
     final String url = 'http://router.project-osrm.org/route/v1/bike/${startRoute.longitude},${startRoute.latitude};${endRoute.longitude},${endRoute.latitude}?geometries=geojson';
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
@@ -574,7 +574,6 @@ class MapState extends State<Home> {
 
         addMarker(endRoute);
         _mapController.fitBounds(LatLngBounds.fromPoints([startRoute, endRoute]));   //zoom bon pour tout voir
-        isNavigating = true;
       });
 
     } else {

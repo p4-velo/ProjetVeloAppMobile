@@ -666,9 +666,8 @@ class MobileView {
                       if (selectedOption != null) {
                         switch (selectedOption) {
                           case 1:
-                            checkPermissionAndFetchLocation(context, endPoint);
                             Navigator.of(context).pop();
-
+                            checkPermissionAndFetchLocation(context, endPoint);
                             double distance = getDistance();
                             int incidentCount = getIncidentCount();
                             showRouteInfoDialog(context, distance, incidentCount);
@@ -707,9 +706,6 @@ class MobileView {
                                   coordinates['longitude']!);
                               await fetchRoute(startPoint, endPoint);
                               Navigator.of(context).pop(); // Fermer la boîte de dialogue après avoir terminé
-
-                              // Afficher la nouvelle pop-up "Hello World"
-
                               double distance = getDistance();
                               int incidentCount = getIncidentCount();
                               showRouteInfoDialog(context, distance, incidentCount);
@@ -920,11 +916,28 @@ class MobileView {
           borderRadius: BorderRadius.circular(30.0),
         ),
         onPressed: () {
-          navigation(false);
-
+          navigation(!isNavigating);
         },
-        child: Icon(
-          Icons.stop,
+        child: Icon( isNavigating ? Icons.stop : Icons.play_arrow,
+          color: global.primary,
+          size: 35,
+        ),
+      ),
+    );
+  }
+
+  Widget buildButtonCenterUserLocation(BuildContext context, bool isNavigating) {
+    return Transform.scale(
+      scale: 1.3,
+      child: FloatingActionButton(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30.0),
+        ),
+        onPressed: () {
+          mapController.move(currentPosition!, 18);
+        },
+        child: Icon( Icons.my_location,
           color: global.primary,
           size: 35,
         ),
@@ -937,8 +950,10 @@ class MobileView {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (isNavigating) buildButtonStartAndStopNavigation(context, isNavigating),
-        if (isNavigating) const SizedBox(height: 50),
+        if (hasUserLocation && !isNavigating) buildButtonCenterUserLocation(context, isNavigating),
+        if (hasUserLocation && !isNavigating) const SizedBox(height: 50),
+        if (hasUserLocation) buildButtonStartAndStopNavigation(context, isNavigating),
+        if (hasUserLocation) const SizedBox(height: 50),
         buildButtonIncident(context),
       ],
     );
