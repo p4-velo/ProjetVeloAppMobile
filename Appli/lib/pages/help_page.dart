@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:projet_velo_app_mobile/widgets/Layout/view_model.dart';
-import 'package:projet_velo_app_mobile/widgets/Render/home/view_model.dart';
+import 'package:projet_velo_app_mobile/widgets/Render/Help/view_model.dart';
 
-class MapPage extends StatelessWidget {
-  const MapPage({super.key});
+class HelpPage extends StatelessWidget {
+  const HelpPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +18,7 @@ class MapPage extends StatelessWidget {
               Expanded(
                 child: Center(
                   child: Layout(
-                    body: Home(),
+                    body: Help(),
                   )
                 ),
               )

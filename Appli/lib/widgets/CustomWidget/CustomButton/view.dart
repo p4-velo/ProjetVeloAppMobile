@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:skeletton_projet_velo/global.dart' as global;
+import 'package:projet_velo_app_mobile/global.dart' as global;
 
 class MobileView {
   final dynamic callbackFunction;

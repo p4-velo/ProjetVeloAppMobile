@@ -1,4 +1,4 @@
-name: skeletton_projet_velo
+name: projet_velo_app_mobile
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -45,6 +45,8 @@ dependencies:
   permission_handler: ^11.3.1
   flutter_compass: ^0.8.0
   connectivity_plus: ^2.3.0
+  dio: ^5.4.3+1
+  google_fonts: ^6.2.1
 
 
 
@@ -67,6 +69,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  assets:
+    - assets/icons/
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

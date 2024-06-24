@@ -4,8 +4,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:skeletton_projet_velo/global.dart' as global;
-import 'package:skeletton_projet_velo/widgets/CustomWidget/CustomLoader/view_model.dart';
+import 'package:projet_velo_app_mobile/global.dart' as global;
+import 'package:projet_velo_app_mobile/widgets/CustomWidget/CustomLoader/view_model.dart';
 import '../../../POO/IncidentType.dart';
 
 

@@ -17,7 +17,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:skeletton_projet_velo/global.dart' as global;
+import 'package:projet_velo_app_mobile/global.dart' as global;
 
 
 
