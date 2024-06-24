@@ -56,7 +56,6 @@ class MapState extends State<Home> {
     const LatLng(49.8566, 3.3522),
   ];
   List<String> addresses = [];
-  bool shouldHideSize = true;
   late int nbSelectedIndices;
 
   List<LatLng> routePoints = [];
@@ -67,6 +66,7 @@ class MapState extends State<Home> {
   bool isLoadingPage = false;
   bool hasUserLocation = false;
   bool showAddress = true;
+  bool showNoResult = false;
   bool? hasLocalisationPermission;
 
 
@@ -131,13 +131,13 @@ class MapState extends State<Home> {
       currentPosition: _currentPosition,
       internetLoading: internetLoading,
       isLoading: isLoading,
-      shouldHideSize: shouldHideSize,
       performSearch: performSearch,
       checkInternetConnection: checkInternetConnection,
       hasUserLocation: hasUserLocation,
       hasLocalisationPermission: hasLocalisationPermission,
       isLoadingPage: isLoadingPage,
       showAddress: showAddress,
+      showNoResult: showNoResult,
       isNavigating: isNavigating,
 
     );
@@ -425,16 +425,17 @@ class MapState extends State<Home> {
     try {
       final addressesFuntion = await searchAddresses(query);
       if (addresses.isNotEmpty) {
+        showNoResult = false;
         addresses = addressesFuntion;
         debugPrint('Address found');
       } else {
         debugPrint('No addresses found');
         addresses = addressesFuntion;
-        shouldHideSize = false;
+        showNoResult = true;
       }
     } catch (error) {
       addresses = [];
-      shouldHideSize = false;
+      showNoResult = true;
       debugPrint('Error searching addresses: $error');
     } finally {
       isLoading = false;
@@ -461,7 +462,7 @@ class MapState extends State<Home> {
       debugPrint('Found ${places.length} places for query $query');
 
       if (places.isNotEmpty){
-        shouldHideSize = true;
+        showAddress = true;
       }else {
         addresses = [];
         showAddress = false;
@@ -485,7 +486,10 @@ class MapState extends State<Home> {
         final double lat = double.parse(firstResult['lat']);
         final double lon = double.parse(firstResult['lon']);
         if (useLoader) setState(() {isLoadingPage = false;});
-        showAddress = false;
+        setState(() {
+          showAddress = false;
+          showNoResult = false;
+        });
         return {'latitude': lat, 'longitude': lon};
       } else {
         throw Exception('No results found for the address');

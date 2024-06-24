@@ -40,13 +40,13 @@ class MobileView {
   LatLng? currentPosition;
   bool internetLoading;
   bool isLoading;
-  bool shouldHideSize;
   Function performSearch;
   Function checkInternetConnection;
   bool hasUserLocation;
   bool? hasLocalisationPermission;
   bool isLoadingPage;
   bool showAddress;
+  bool showNoResult;
   bool isNavigating;
 
   MobileView({
@@ -76,13 +76,13 @@ class MobileView {
     required this.currentPosition,
     required this.internetLoading,
     required this.isLoading,
-    required this.shouldHideSize,
     required this.performSearch,
     required this.checkInternetConnection,
     required this.hasUserLocation,
     required this.hasLocalisationPermission,
     required this.isLoadingPage,
     required this.showAddress,
+    required this.showNoResult,
     required this.isNavigating,
   });
 
@@ -125,7 +125,6 @@ class MobileView {
                 markers: markers,
                 routePoints: routePoints,
                 context: context,
-                shouldHideSize: shouldHideSize,
                 setState: setState,
               ),
 
@@ -143,7 +142,7 @@ class MobileView {
                     context: context,
                     setState: setState,
                   )
-                      :  !showAddress ? hideSizedBox(shouldHideSize) : Container(),
+                      :  showNoResult ? noResult() : Container(),
                   buildTagList(
                     incidentsTypes: incidentsTypes,
                     selectedIndices: selectedIndices,
@@ -180,15 +179,8 @@ class MobileView {
     );
   }
 
-  Widget hideSizedBox(bool shouldHideSize, { bool isInPopup = false}) {
-    return shouldHideSize
-        ? Container(
-        color: isInPopup ? Colors.transparent : Colors.white,
-        margin: isInPopup ? const EdgeInsets.all(0) : const EdgeInsets.all(8.0),
-        child: const SizedBox()
-    )
-
-        : Container(
+  Widget noResult({ bool isInPopup = false}) {
+     return Container(
       color: isInPopup ? Colors.transparent : Colors.white,
       margin: isInPopup ? const EdgeInsets.all(0) : const EdgeInsets.all(8.0),
       child: SizedBox(
@@ -543,6 +535,7 @@ class MobileView {
                         onSubmitted: (value) {
                           setState(() {
                             isLoadingPopUp = true;
+                            showNoResult = false;
                           });
 
                           searchAddresses(value, useLoader: false, showAddressOnHome : false).then((addresses) {
@@ -550,13 +543,13 @@ class MobileView {
                               try {
                                 setState(() {
                                   address = addresses[0];
-                                  shouldHideSize = true;
+                                  showNoResult = false;
                                   isLoadingPopUp = false;
                                 });
                               } catch (error) {
                                 setState(() {
                                   address = '';
-                                  shouldHideSize = false;
+                                  showNoResult = true;
                                   isLoadingPopUp = false;
                                 });
                                 debugPrint('Error getting coordinates: $error');
@@ -565,14 +558,14 @@ class MobileView {
                               debugPrint('No addresses found');
                               setState(() {
                                 address = '';
-                                shouldHideSize = false;
+                                showNoResult = true;
                                 isLoadingPopUp = false;
                               });
                             }
                           }).catchError((error) {
                             setState(() {
                               address = '';
-                              shouldHideSize = false;
+                              showNoResult = true;
                               isLoadingPopUp = false;
                             });
                             debugPrint('Error searching addresses: $error');
@@ -592,7 +585,8 @@ class MobileView {
                         color: Colors.transparent,
                         child: loaderInSizedBox(size: 20)
                     ) :
-                    address.isNotEmpty ? IntrinsicHeight(
+                    address.isNotEmpty  && !showNoResult ?
+                    IntrinsicHeight(
                       child: Container(
                         color: Colors.transparent,
                         child: SingleChildScrollView(
@@ -626,8 +620,8 @@ class MobileView {
                         ),
                       ),
                     )
-                        : hideSizedBox(shouldHideSize, isInPopup: true),
-                    // hideSizedBox(shouldHideSize, isInPopup: true),
+                        :   showNoResult ? noResult(isInPopup: true) : Container(),
+
                     RadioListTile<int>(
                       title: DropdownButton<String>(
                         value: selectedFavoriteAddress,
@@ -968,7 +962,6 @@ class MobileView {
     required List<Marker> markers,
     required List<LatLng> routePoints,
     required BuildContext context,
-    required bool shouldHideSize,
     required StateSetter setState
   }) {
     return PopupScope(
