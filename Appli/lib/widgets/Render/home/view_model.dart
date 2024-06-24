@@ -45,7 +45,9 @@ class MapState extends State<Home> {
 
 
   List<Incident> incidents = [];
-  List<Marker> markers= [];
+  List<Marker> markersClustered= [];
+  List<Marker> nonClusteredMarkers = [];
+
 
   late List<Danger> dangers = [];
   late List<List<LatLng>> dangerOctagons = [];
@@ -88,7 +90,8 @@ class MapState extends State<Home> {
     _startCompassAndLocalisationStream();
 
     incidents = generateRandomIncidents(0);
-    markers = filterIncidentsBySelectedTypes(incidents)
+
+    markersClustered = filterIncidentsBySelectedTypes(incidents)
         .map<Marker>(
           (incident) => Marker(
         point: LatLng(incident.localisation.latitude, incident.localisation.longitude),
@@ -107,7 +110,8 @@ class MapState extends State<Home> {
     var currentView = MobileView(
       context: context,
       popupcontroller: _popupController,
-      markers: markers,
+      markersClustered: markersClustered,
+      nonClusteredMarkers: nonClusteredMarkers,
       points: points,
       incidentsTypes: _incidentTypes,
       selectedIndices: _selectedIndices,
@@ -205,10 +209,10 @@ class MapState extends State<Home> {
         color: Colors.red, // Choisissez la couleur que vous voulez
       ),
     );
-    List<Marker> newMarkers =List.from(markers);
+    List<Marker> newMarkers =List.from(nonClusteredMarkers);
     newMarkers.add(marker);
     setState(() {
-      markers = newMarkers;
+      nonClusteredMarkers = newMarkers;
     });
   }
 
@@ -231,11 +235,11 @@ class MapState extends State<Home> {
 
     setState(() {
       if (_userMarker != null) {
-        markers.remove(_userMarker);
+        nonClusteredMarkers.remove(_userMarker);
       }
-      markers.add(newMarker);
+      nonClusteredMarkers.add(newMarker);
       _userMarker = newMarker;
-      markers = List.from(markers);
+      nonClusteredMarkers = List.from(nonClusteredMarkers);
       if (withMoveCamera) {
         _mapController.move(point, _mapController.camera.zoom);
       }
@@ -270,10 +274,10 @@ class MapState extends State<Home> {
             color: global.primary,
           ),
         );
-        List<Marker> newMarkers = List.from(markers);
+        List<Marker> newMarkers = List.from(markersClustered);
         newMarkers.add(marker);
         setState(() {
-          markers = newMarkers;
+          markersClustered = newMarkers;
         });
         break;
 
@@ -297,10 +301,10 @@ class MapState extends State<Home> {
             color: global.primary,
           ),
         );
-        List<Marker> newMarkers =List.from(markers);
+        List<Marker> newMarkers =List.from(markersClustered);
         newMarkers.add(marker);
         setState(() {
-          markers = newMarkers;
+          markersClustered = newMarkers;
         });
         break;
 
@@ -324,10 +328,10 @@ class MapState extends State<Home> {
             color: global.primary,
           ),
         );
-        List<Marker> newMarkers =List.from(markers);
+        List<Marker> newMarkers =List.from(markersClustered);
         newMarkers.add(marker);
         setState(() {
-          markers = newMarkers;
+          markersClustered = newMarkers;
         });
         break;
 
@@ -350,10 +354,10 @@ class MapState extends State<Home> {
             color: global.primary,
           ),
         );
-        List<Marker> newMarkers =List.from(markers);
+        List<Marker> newMarkers =List.from(markersClustered);
         newMarkers.add(marker);
         setState(() {
-          markers = newMarkers;
+          markersClustered = newMarkers;
         });
         break;
 
@@ -387,7 +391,7 @@ class MapState extends State<Home> {
       );
     }).toList();
     setState(() {
-      markers = listMarkers;
+      markersClustered = listMarkers;
     });
   }
 

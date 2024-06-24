@@ -13,7 +13,8 @@ import '../../../POO/IncidentType.dart';
 class MobileView {
   BuildContext context;
   PopupController popupcontroller;
-  List<Marker> markers;
+  List<Marker> markersClustered;
+  List<Marker> nonClusteredMarkers;
   List<LatLng> points;
   List<IncidentType> incidentsTypes;
   List<int> selectedIndices;
@@ -52,7 +53,8 @@ class MobileView {
   MobileView({
     required this.context,
     required this.popupcontroller,
-    required this.markers,
+    required this.markersClustered,
+    required this.nonClusteredMarkers,
     required this.points,
     required this.incidentsTypes,
     required this.selectedIndices,
@@ -122,7 +124,8 @@ class MobileView {
                 mapController: mapController,
                 currentPosition: currentPosition,
                 points: points,
-                markers: markers,
+                markersClustered: markersClustered,
+                nonClusteredMarkers: nonClusteredMarkers,
                 routePoints: routePoints,
                 context: context,
                 setState: setState,
@@ -482,6 +485,7 @@ class MobileView {
     int? selectedOption; // Variable pour stocker la valeur sélectionnée
     String address = '';
     bool isLoadingPopUp = false;
+    showNoResult = false;
     String inputText = '';
     String addressStartPoint = '';
     String? selectedFavoriteAddress;
@@ -959,11 +963,14 @@ class MobileView {
     required MapController mapController,
     required LatLng? currentPosition,
     required List<LatLng> points,
-    required List<Marker> markers,
+    required List<Marker> markersClustered,
+    required List<Marker> nonClusteredMarkers,
     required List<LatLng> routePoints,
     required BuildContext context,
     required StateSetter setState
   }) {
+
+
     return PopupScope(
       popupController: popupcontroller,
       child: FlutterMap(
@@ -983,7 +990,8 @@ class MobileView {
             urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           ),
           MarkerClusterLayerWidget(
-            options: MarkerClusterLayerOptions(
+            options:
+            MarkerClusterLayerOptions(
               spiderfyCircleRadius: 80,
               spiderfySpiralDistanceMultiplier: 2,
               circleSpiralSwitchover: 12,
@@ -993,7 +1001,7 @@ class MobileView {
               alignment: Alignment.center,
               padding: const EdgeInsets.all(50),
               maxZoom: 15,
-              markers: markers,
+              markers: markersClustered,
               popupOptions: PopupOptions(
                 popupSnap: PopupSnap.markerTop,
                 popupController: popupcontroller,
@@ -1026,6 +1034,7 @@ class MobileView {
               },
             ),
           ),
+          MarkerLayer(markers: nonClusteredMarkers),
           PolylineLayer(
             polylines: [
               Polyline(
