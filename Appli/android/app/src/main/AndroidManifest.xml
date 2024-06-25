@@ -9,7 +9,8 @@
 
 
     <application
-        android:label="Your App Name"
+        android:label="Dij'on bike"
+        android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
         <activity
