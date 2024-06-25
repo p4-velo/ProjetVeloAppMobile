@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:projet_velo_app_mobile/pages/fav_address_page.dart';
 import 'package:projet_velo_app_mobile/pages/help_page.dart';
 import 'package:projet_velo_app_mobile/pages/login_page.dart';
-import 'package:projet_velo_app_mobile/pages/fav_address_page.dart';
 import 'package:projet_velo_app_mobile/pages/map_page.dart';
-import 'package:projet_velo_app_mobile/pages/page3_page.dart';
 import 'package:projet_velo_app_mobile/pages/signup_page.dart';
 
 class AppRouter {
@@ -46,13 +45,6 @@ class AppRouter {
           pageBuilder: (context, state) => CustomTransitionPage(
             transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
             child: const FavAddressPage(),
-          )
-        ),
-        GoRoute(
-          path: '/page3',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
-            child: const Page3page(),
           )
         ),
         GoRoute(
