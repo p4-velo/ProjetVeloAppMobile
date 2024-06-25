@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:projet_velo_app_mobile/widgets/Render/SignUp/view_model.dart';
+import 'package:skeletton_projet_velo/widgets/Layout/view_model.dart';
+import 'package:skeletton_projet_velo/widgets/Render/Page3/view_model.dart';
 
-class SignUpPage extends StatelessWidget {
-  const SignUpPage({super.key});
+class Page3page extends StatelessWidget {
+  const Page3page({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -16,9 +17,11 @@ class SignUpPage extends StatelessWidget {
             children: [
               Expanded(
                 child: Center(
-                  child: SignUp(),
-                )
-              ),
+                  child: Layout(
+                    body: Page3(),
+                  )
+                ),
+              )
             ]
           )
         )
