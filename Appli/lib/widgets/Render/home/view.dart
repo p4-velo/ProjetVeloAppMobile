@@ -13,7 +13,8 @@ import '../../../POO/IncidentType.dart';
 class MobileView {
   BuildContext context;
   PopupController popupcontroller;
-  List<Marker> markers;
+  List<Marker> markersClustered;
+  List<Marker> nonClusteredMarkers;
   List<LatLng> points;
   List<IncidentType> incidentsTypes;
   List<int> selectedIndices;
@@ -38,21 +39,26 @@ class MobileView {
   Function addMarkerTest;
   Function generateTest;
   LatLng? currentPosition;
+  double currentHeading;
   bool internetLoading;
   bool isLoading;
-  bool shouldHideSize;
   Function performSearch;
   Function checkInternetConnection;
   bool hasUserLocation;
   bool? hasLocalisationPermission;
   bool isLoadingPage;
   bool showAddress;
+  bool showNoResult;
   bool isNavigating;
+  final TextEditingController controllerText;
+
+
 
   MobileView({
     required this.context,
     required this.popupcontroller,
-    required this.markers,
+    required this.markersClustered,
+    required this.nonClusteredMarkers,
     required this.points,
     required this.incidentsTypes,
     required this.selectedIndices,
@@ -74,16 +80,18 @@ class MobileView {
     required this.getDistance,
     required this.getIncidentCount,
     required this.currentPosition,
+    required this.currentHeading,
     required this.internetLoading,
     required this.isLoading,
-    required this.shouldHideSize,
     required this.performSearch,
     required this.checkInternetConnection,
     required this.hasUserLocation,
     required this.hasLocalisationPermission,
     required this.isLoadingPage,
     required this.showAddress,
+    required this.showNoResult,
     required this.isNavigating,
+    required this.controllerText,
   });
 
   final TextStyle selectedTextStyle = const TextStyle(
@@ -108,24 +116,21 @@ class MobileView {
   render() {
     return StatefulBuilder(
       builder: (BuildContext context, StateSetter setState) {
-
-
         return Scaffold(
           resizeToAvoidBottomInset: false,
           floatingActionButton: buildFloatingButtons(context, isNavigating),
           body: Stack(
             children: [
               const SizedBox(),
-
               buildMapWidget(
                 popupcontroller: popupcontroller,
                 mapController: mapController,
                 currentPosition: currentPosition,
                 points: points,
-                markers: markers,
+                markersClustered: markersClustered,
+                nonClusteredMarkers: nonClusteredMarkers,
                 routePoints: routePoints,
                 context: context,
-                shouldHideSize: shouldHideSize,
                 setState: setState,
               ),
 
@@ -143,7 +148,7 @@ class MobileView {
                     context: context,
                     setState: setState,
                   )
-                      :  !showAddress ? hideSizedBox(shouldHideSize) : Container(),
+                      :  showNoResult ? noResult() : Container(),
                   buildTagList(
                     incidentsTypes: incidentsTypes,
                     selectedIndices: selectedIndices,
@@ -180,15 +185,8 @@ class MobileView {
     );
   }
 
-  Widget hideSizedBox(bool shouldHideSize, { bool isInPopup = false}) {
-    return shouldHideSize
-        ? Container(
-        color: isInPopup ? Colors.transparent : Colors.white,
-        margin: isInPopup ? const EdgeInsets.all(0) : const EdgeInsets.all(8.0),
-        child: const SizedBox()
-    )
-
-        : Container(
+  Widget noResult({ bool isInPopup = false}) {
+     return Container(
       color: isInPopup ? Colors.transparent : Colors.white,
       margin: isInPopup ? const EdgeInsets.all(0) : const EdgeInsets.all(8.0),
       child: SizedBox(
@@ -490,6 +488,7 @@ class MobileView {
     int? selectedOption; // Variable pour stocker la valeur sélectionnée
     String address = '';
     bool isLoadingPopUp = false;
+    showNoResult = false;
     String inputText = '';
     String addressStartPoint = '';
     String? selectedFavoriteAddress;
@@ -543,6 +542,7 @@ class MobileView {
                         onSubmitted: (value) {
                           setState(() {
                             isLoadingPopUp = true;
+                            showNoResult = false;
                           });
 
                           searchAddresses(value, useLoader: false, showAddressOnHome : false).then((addresses) {
@@ -550,13 +550,13 @@ class MobileView {
                               try {
                                 setState(() {
                                   address = addresses[0];
-                                  shouldHideSize = true;
+                                  showNoResult = false;
                                   isLoadingPopUp = false;
                                 });
                               } catch (error) {
                                 setState(() {
                                   address = '';
-                                  shouldHideSize = false;
+                                  showNoResult = true;
                                   isLoadingPopUp = false;
                                 });
                                 debugPrint('Error getting coordinates: $error');
@@ -565,14 +565,14 @@ class MobileView {
                               debugPrint('No addresses found');
                               setState(() {
                                 address = '';
-                                shouldHideSize = false;
+                                showNoResult = true;
                                 isLoadingPopUp = false;
                               });
                             }
                           }).catchError((error) {
                             setState(() {
                               address = '';
-                              shouldHideSize = false;
+                              showNoResult = true;
                               isLoadingPopUp = false;
                             });
                             debugPrint('Error searching addresses: $error');
@@ -592,7 +592,8 @@ class MobileView {
                         color: Colors.transparent,
                         child: loaderInSizedBox(size: 20)
                     ) :
-                    address.isNotEmpty ? IntrinsicHeight(
+                    address.isNotEmpty  && !showNoResult ?
+                    IntrinsicHeight(
                       child: Container(
                         color: Colors.transparent,
                         child: SingleChildScrollView(
@@ -626,8 +627,8 @@ class MobileView {
                         ),
                       ),
                     )
-                        : hideSizedBox(shouldHideSize, isInPopup: true),
-                    // hideSizedBox(shouldHideSize, isInPopup: true),
+                        :   showNoResult ? noResult(isInPopup: true) : Container(),
+
                     RadioListTile<int>(
                       title: DropdownButton<String>(
                         value: selectedFavoriteAddress,
@@ -786,6 +787,7 @@ class MobileView {
               children: [
                 TextButton(
                   onPressed: () {
+                    controllerText.clear(); // clear the text field
                     Navigator.of(context).pop();
                   },
                   style: TextButton.styleFrom(
@@ -806,6 +808,7 @@ class MobileView {
 
                 TextButton(
                   onPressed: () {
+                    controllerText.clear(); // clear the text field
                     Navigator.of(context).pop();
                     navigation(true);
                   },
@@ -936,6 +939,7 @@ class MobileView {
         ),
         onPressed: () {
           mapController.move(currentPosition!, 18);
+          mapController.rotate(-currentHeading + 45);
         },
         child: Icon( Icons.my_location,
           color: global.primary,
@@ -965,12 +969,14 @@ class MobileView {
     required MapController mapController,
     required LatLng? currentPosition,
     required List<LatLng> points,
-    required List<Marker> markers,
+    required List<Marker> markersClustered,
+    required List<Marker> nonClusteredMarkers,
     required List<LatLng> routePoints,
     required BuildContext context,
-    required bool shouldHideSize,
     required StateSetter setState
   }) {
+
+
     return PopupScope(
       popupController: popupcontroller,
       child: FlutterMap(
@@ -990,7 +996,8 @@ class MobileView {
             urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           ),
           MarkerClusterLayerWidget(
-            options: MarkerClusterLayerOptions(
+            options:
+            MarkerClusterLayerOptions(
               spiderfyCircleRadius: 80,
               spiderfySpiralDistanceMultiplier: 2,
               circleSpiralSwitchover: 12,
@@ -1000,7 +1007,7 @@ class MobileView {
               alignment: Alignment.center,
               padding: const EdgeInsets.all(50),
               maxZoom: 15,
-              markers: markers,
+              markers: markersClustered,
               popupOptions: PopupOptions(
                 popupSnap: PopupSnap.markerTop,
                 popupController: popupcontroller,
@@ -1033,6 +1040,7 @@ class MobileView {
               },
             ),
           ),
+          MarkerLayer(markers: nonClusteredMarkers),
           PolylineLayer(
             polylines: [
               Polyline(
@@ -1175,6 +1183,7 @@ class MobileView {
             ),
             Expanded(
               child: TextField(
+                controller: controllerText,
                 decoration: const InputDecoration(
                   hintText: 'Rechercher un lieu ',
                   hintStyle: TextStyle(
@@ -1183,9 +1192,7 @@ class MobileView {
                   border: InputBorder.none,
                 ),
                 onSubmitted: (value) {
-
                   performSearch(value);
-
                 },
               ),
             ),

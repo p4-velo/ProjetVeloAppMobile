@@ -45,7 +45,9 @@ class MapState extends State<Home> {
 
 
   List<Incident> incidents = [];
-  List<Marker> markers= [];
+  List<Marker> markersClustered= [];
+  List<Marker> nonClusteredMarkers = [];
+
 
   late List<Danger> dangers = [];
   late List<List<LatLng>> dangerOctagons = [];
@@ -56,7 +58,6 @@ class MapState extends State<Home> {
     const LatLng(49.8566, 3.3522),
   ];
   List<String> addresses = [];
-  bool shouldHideSize = true;
   late int nbSelectedIndices;
 
   List<LatLng> routePoints = [];
@@ -67,7 +68,11 @@ class MapState extends State<Home> {
   bool isLoadingPage = false;
   bool hasUserLocation = false;
   bool showAddress = true;
+  bool showNoResult = false;
   bool? hasLocalisationPermission;
+
+  final TextEditingController _controllerText = TextEditingController();
+
 
 
 
@@ -88,7 +93,8 @@ class MapState extends State<Home> {
     _startCompassAndLocalisationStream();
 
     incidents = generateRandomIncidents(0);
-    markers = filterIncidentsBySelectedTypes(incidents)
+
+    markersClustered = filterIncidentsBySelectedTypes(incidents)
         .map<Marker>(
           (incident) => Marker(
         point: LatLng(incident.localisation.latitude, incident.localisation.longitude),
@@ -107,7 +113,8 @@ class MapState extends State<Home> {
     var currentView = MobileView(
       context: context,
       popupcontroller: _popupController,
-      markers: markers,
+      markersClustered: markersClustered,
+      nonClusteredMarkers: nonClusteredMarkers,
       points: points,
       incidentsTypes: _incidentTypes,
       selectedIndices: _selectedIndices,
@@ -129,16 +136,18 @@ class MapState extends State<Home> {
       getDistance: getDistance,
       getIncidentCount: getIncidentCount,
       currentPosition: _currentPosition,
+      currentHeading: _currentHeading,
       internetLoading: internetLoading,
       isLoading: isLoading,
-      shouldHideSize: shouldHideSize,
       performSearch: performSearch,
       checkInternetConnection: checkInternetConnection,
       hasUserLocation: hasUserLocation,
       hasLocalisationPermission: hasLocalisationPermission,
       isLoadingPage: isLoadingPage,
       showAddress: showAddress,
+      showNoResult: showNoResult,
       isNavigating: isNavigating,
+      controllerText: _controllerText,
 
     );
     return currentView.render();
@@ -205,10 +214,9 @@ class MapState extends State<Home> {
         color: Colors.red, // Choisissez la couleur que vous voulez
       ),
     );
-    List<Marker> newMarkers =List.from(markers);
-    newMarkers.add(marker);
+    List<Marker> newMarkers = [marker]; // clean la liste comme ça enlève l'ancien pin si il y avait , n'influe pas le point de l'user car se recréé tooujours .
     setState(() {
-      markers = newMarkers;
+      nonClusteredMarkers = newMarkers;
     });
   }
 
@@ -220,7 +228,7 @@ class MapState extends State<Home> {
       point: point,
       rotate: false,
       child: Transform.rotate(
-        angle: (heading + mapRotation) * (3.1415926535897932 / 180),
+        angle: (heading ) * (pi / 180) - pi/4,
         child: const Icon(
           Icons.navigation,
           color: Colors.blue,
@@ -231,13 +239,14 @@ class MapState extends State<Home> {
 
     setState(() {
       if (_userMarker != null) {
-        markers.remove(_userMarker);
+        nonClusteredMarkers.remove(_userMarker);
       }
-      markers.add(newMarker);
+      nonClusteredMarkers.add(newMarker);
       _userMarker = newMarker;
-      markers = List.from(markers);
+      nonClusteredMarkers = List.from(nonClusteredMarkers);
       if (withMoveCamera) {
         _mapController.move(point, _mapController.camera.zoom);
+        _mapController.rotate( -_currentHeading + 45);
       }
 
     });
@@ -270,10 +279,10 @@ class MapState extends State<Home> {
             color: global.primary,
           ),
         );
-        List<Marker> newMarkers = List.from(markers);
+        List<Marker> newMarkers = List.from(markersClustered);
         newMarkers.add(marker);
         setState(() {
-          markers = newMarkers;
+          markersClustered = newMarkers;
         });
         break;
 
@@ -297,10 +306,10 @@ class MapState extends State<Home> {
             color: global.primary,
           ),
         );
-        List<Marker> newMarkers =List.from(markers);
+        List<Marker> newMarkers =List.from(markersClustered);
         newMarkers.add(marker);
         setState(() {
-          markers = newMarkers;
+          markersClustered = newMarkers;
         });
         break;
 
@@ -324,10 +333,10 @@ class MapState extends State<Home> {
             color: global.primary,
           ),
         );
-        List<Marker> newMarkers =List.from(markers);
+        List<Marker> newMarkers =List.from(markersClustered);
         newMarkers.add(marker);
         setState(() {
-          markers = newMarkers;
+          markersClustered = newMarkers;
         });
         break;
 
@@ -350,10 +359,10 @@ class MapState extends State<Home> {
             color: global.primary,
           ),
         );
-        List<Marker> newMarkers =List.from(markers);
+        List<Marker> newMarkers =List.from(markersClustered);
         newMarkers.add(marker);
         setState(() {
-          markers = newMarkers;
+          markersClustered = newMarkers;
         });
         break;
 
@@ -387,7 +396,7 @@ class MapState extends State<Home> {
       );
     }).toList();
     setState(() {
-      markers = listMarkers;
+      markersClustered = listMarkers;
     });
   }
 
@@ -425,16 +434,17 @@ class MapState extends State<Home> {
     try {
       final addressesFuntion = await searchAddresses(query);
       if (addresses.isNotEmpty) {
+        showNoResult = false;
         addresses = addressesFuntion;
         debugPrint('Address found');
       } else {
         debugPrint('No addresses found');
         addresses = addressesFuntion;
-        shouldHideSize = false;
+        showNoResult = true;
       }
     } catch (error) {
       addresses = [];
-      shouldHideSize = false;
+      showNoResult = true;
       debugPrint('Error searching addresses: $error');
     } finally {
       isLoading = false;
@@ -461,7 +471,7 @@ class MapState extends State<Home> {
       debugPrint('Found ${places.length} places for query $query');
 
       if (places.isNotEmpty){
-        shouldHideSize = true;
+        showAddress = true;
       }else {
         addresses = [];
         showAddress = false;
@@ -485,7 +495,10 @@ class MapState extends State<Home> {
         final double lat = double.parse(firstResult['lat']);
         final double lon = double.parse(firstResult['lon']);
         if (useLoader) setState(() {isLoadingPage = false;});
-        showAddress = false;
+        setState(() {
+          showAddress = false;
+          showNoResult = false;
+        });
         return {'latitude': lat, 'longitude': lon};
       } else {
         throw Exception('No results found for the address');
@@ -645,11 +658,11 @@ class MapState extends State<Home> {
   void _updateMapPosition() {
     if (_currentPosition != null) {
       _mapController.move(_currentPosition!, 18.0);
-      _mapController.rotate(-_currentHeading);
+      _mapController.rotate(-_currentHeading + 45);
     }
-    if (isNavigating){
-      _updateMapPosition();
-    }
+    //if (isNavigating){
+      //_updateMapPosition();
+    //}
   }
 
 
