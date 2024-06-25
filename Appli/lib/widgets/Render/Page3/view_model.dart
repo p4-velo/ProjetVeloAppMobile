@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 import 'view.dart';
 
-class SignUp extends StatefulWidget {
-  const SignUp({super.key});
+class Page3 extends StatefulWidget {
+  const Page3({super.key});
 
   @override
-  SignUpState createState() {
-    return SignUpState();
+  Page3State createState() {
+    return Page3State();
   }
 }
 
-class SignUpState extends State<SignUp> {
+class Page3State extends State<Page3> {
   bool isLoading = false;
-  dynamic formKey = GlobalKey<FormState>();
-
 
   void startLoading() async {
     setState(() {
@@ -36,20 +34,12 @@ class SignUpState extends State<SignUp> {
   void initState() {
     super.initState();
   }
-
-  Future<void> validateSignUp() async {
-    if(formKey.currentState!.validate()) {
-
-    }
-  }
   
   @override
   Widget build(BuildContext context) {
     var currentView = MobileView(
       context: context,
       isLoading: isLoading,
-      formKey: formKey,
-      validateSignUp: validateSignUp
     );
 
     return currentView.render();
