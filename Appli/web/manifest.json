@@ -1,6 +1,6 @@
 {
-    "name": "skeletton_projet_velo",
-    "short_name": "skeletton_projet_velo",
+    "name": "projet_velo_app_mobile",
+    "short_name": "projet_velo_app_mobile",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
