@@ -1,4 +1,4 @@
-package com.example.projet_velo_app_mobile
+package com.example.skeletton_projet_velo
 
 import io.flutter.embedding.android.FlutterActivity
 
