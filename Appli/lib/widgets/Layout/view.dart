@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:skeletton_projet_velo/global.dart' as global;
+import 'package:projet_velo_app_mobile/global.dart' as global;
 
 class MobileView {
   BuildContext context;
@@ -48,15 +48,15 @@ class MobileView {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: <Widget>[
                       MenuItem(
-                        goToRoute: '/map',
+                        goToRoute: '/favaddress',
                         icon: Icons.star_outline,
                       ),
                       MenuItem(
-                        goToRoute: '/page1',
+                        goToRoute: '/map',
                         icon: Icons.map,
                       ),
                       MenuItem(
-                        goToRoute: '/page3',
+                        goToRoute: '/help',
                         icon: Icons.person,
                       )
                     ],

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'view.dart';
 
-class Page1 extends StatefulWidget {
-  const Page1({super.key});
+class Help extends StatefulWidget {
+  const Help({super.key});
 
   @override
-  Page1State createState() {
-    return Page1State();
+  HelpState createState() {
+    return HelpState();
   }
 }
 
-class Page1State extends State<Page1> {
+class HelpState extends State<Help> {
   bool isLoading = false;
 
   void startLoading() async {
