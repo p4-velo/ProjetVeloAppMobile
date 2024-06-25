@@ -71,6 +71,9 @@ class MapState extends State<Home> {
   bool showNoResult = false;
   bool? hasLocalisationPermission;
 
+  final TextEditingController _controllerText = TextEditingController();
+
+
 
 
   @override
@@ -144,6 +147,7 @@ class MapState extends State<Home> {
       showAddress: showAddress,
       showNoResult: showNoResult,
       isNavigating: isNavigating,
+      controllerText: _controllerText,
 
     );
     return currentView.render();
@@ -210,8 +214,7 @@ class MapState extends State<Home> {
         color: Colors.red, // Choisissez la couleur que vous voulez
       ),
     );
-    List<Marker> newMarkers =List.from(nonClusteredMarkers);
-    newMarkers.add(marker);
+    List<Marker> newMarkers = [marker]; // clean la liste comme ça enlève l'ancien pin si il y avait , n'influe pas le point de l'user car se recréé tooujours .
     setState(() {
       nonClusteredMarkers = newMarkers;
     });

@@ -50,6 +50,9 @@ class MobileView {
   bool showAddress;
   bool showNoResult;
   bool isNavigating;
+  final TextEditingController controllerText;
+
+
 
   MobileView({
     required this.context,
@@ -88,6 +91,7 @@ class MobileView {
     required this.showAddress,
     required this.showNoResult,
     required this.isNavigating,
+    required this.controllerText,
   });
 
   final TextStyle selectedTextStyle = const TextStyle(
@@ -112,15 +116,12 @@ class MobileView {
   render() {
     return StatefulBuilder(
       builder: (BuildContext context, StateSetter setState) {
-
-
         return Scaffold(
           resizeToAvoidBottomInset: false,
           floatingActionButton: buildFloatingButtons(context, isNavigating),
           body: Stack(
             children: [
               const SizedBox(),
-
               buildMapWidget(
                 popupcontroller: popupcontroller,
                 mapController: mapController,
@@ -786,6 +787,7 @@ class MobileView {
               children: [
                 TextButton(
                   onPressed: () {
+                    controllerText.clear(); // clear the text field
                     Navigator.of(context).pop();
                   },
                   style: TextButton.styleFrom(
@@ -806,6 +808,7 @@ class MobileView {
 
                 TextButton(
                   onPressed: () {
+                    controllerText.clear(); // clear the text field
                     Navigator.of(context).pop();
                     navigation(true);
                   },
@@ -1180,6 +1183,7 @@ class MobileView {
             ),
             Expanded(
               child: TextField(
+                controller: controllerText,
                 decoration: const InputDecoration(
                   hintText: 'Rechercher un lieu ',
                   hintStyle: TextStyle(
@@ -1188,9 +1192,7 @@ class MobileView {
                   border: InputBorder.none,
                 ),
                 onSubmitted: (value) {
-
                   performSearch(value);
-
                 },
               ),
             ),
