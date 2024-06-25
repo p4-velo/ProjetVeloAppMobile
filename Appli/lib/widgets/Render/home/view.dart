@@ -39,6 +39,7 @@ class MobileView {
   Function addMarkerTest;
   Function generateTest;
   LatLng? currentPosition;
+  double currentHeading;
   bool internetLoading;
   bool isLoading;
   Function performSearch;
@@ -76,6 +77,7 @@ class MobileView {
     required this.getDistance,
     required this.getIncidentCount,
     required this.currentPosition,
+    required this.currentHeading,
     required this.internetLoading,
     required this.isLoading,
     required this.performSearch,
@@ -934,6 +936,7 @@ class MobileView {
         ),
         onPressed: () {
           mapController.move(currentPosition!, 18);
+          mapController.rotate(-currentHeading + 45);
         },
         child: Icon( Icons.my_location,
           color: global.primary,

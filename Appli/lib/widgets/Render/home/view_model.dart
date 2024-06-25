@@ -133,6 +133,7 @@ class MapState extends State<Home> {
       getDistance: getDistance,
       getIncidentCount: getIncidentCount,
       currentPosition: _currentPosition,
+      currentHeading: _currentHeading,
       internetLoading: internetLoading,
       isLoading: isLoading,
       performSearch: performSearch,
@@ -224,7 +225,7 @@ class MapState extends State<Home> {
       point: point,
       rotate: false,
       child: Transform.rotate(
-        angle: (heading + mapRotation) * (3.1415926535897932 / 180),
+        angle: (heading ) * (pi / 180) - pi/4,
         child: const Icon(
           Icons.navigation,
           color: Colors.blue,
@@ -242,6 +243,7 @@ class MapState extends State<Home> {
       nonClusteredMarkers = List.from(nonClusteredMarkers);
       if (withMoveCamera) {
         _mapController.move(point, _mapController.camera.zoom);
+        _mapController.rotate( -_currentHeading + 45);
       }
 
     });
@@ -653,11 +655,11 @@ class MapState extends State<Home> {
   void _updateMapPosition() {
     if (_currentPosition != null) {
       _mapController.move(_currentPosition!, 18.0);
-      _mapController.rotate(-_currentHeading);
+      _mapController.rotate(-_currentHeading + 45);
     }
-    if (isNavigating){
-      _updateMapPosition();
-    }
+    //if (isNavigating){
+      //_updateMapPosition();
+    //}
   }
 
 
