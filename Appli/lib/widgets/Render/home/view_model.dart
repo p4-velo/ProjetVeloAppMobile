@@ -750,7 +750,10 @@ class MapState extends State<Home> {
   }
   void addFavoriteMarkerIfIsAsked() {
     if (widget.latitude != null && widget.longitude != null) {
-      favoritePlace = LatLng(double.parse(widget.latitude!), double.parse(widget.longitude!));
+      favoritePlace = LatLng(double.parse(widget.longitude!), double.parse(widget.latitude!));
+      print(favoritePlace?.latitude);
+      print(favoritePlace?.longitude);
+
       setState(() {
         nonClusteredMarkers.add(
           Marker(

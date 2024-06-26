@@ -717,8 +717,7 @@ class MobileView {
                                   coordinates['latitude']!,
                                   coordinates['longitude']!);
                               await fetchRoute(startPoint, endPoint);
-                              Navigator.of(context)
-                                  .pop(); // Fermer la boîte de dialogue après avoir terminé
+                              Navigator.of(context).pop(); // Fermer la boîte de dialogue après avoir terminé
                               double distance = getDistance();
                               int incidentCount = getIncidentCount();
                               showRouteInfoDialog(
@@ -1030,22 +1029,43 @@ class MobileView {
               alignment: Alignment.center,
               padding: const EdgeInsets.all(50),
               maxZoom: 15,
-              markers: markersClustered,
+              markers: nonClusteredMarkers,
               popupOptions: PopupOptions(
                 popupSnap: PopupSnap.markerTop,
                 popupController: popupcontroller,
-                popupBuilder: (_, marker) =>
-                    Container(
-                      width: 200,
-                      height: 100,
-                      color: Colors.white,
-                      child: GestureDetector(
-                        onTap: () => debugPrint('Popup tap!'),
-                        child: const Text(
-                          'Le nom du POI',
+                popupBuilder: (_, marker) => GestureDetector(
+                  onTap: () {
+                    fetchRoute(currentPosition!, marker.point);
+                    showRouteInfoDialog(context, getDistance(), getIncidentCount());
+                    popupcontroller.hideAllPopups();
+                  },
+                  child: Container(
+                    width: 150, // Réduire la largeur
+                    height: 70, // Réduire la hauteur
+                    padding: const EdgeInsets.all(8.0),
+                    decoration: BoxDecoration(
+                      color: global.primary, // Utiliser la couleur primaire du thème
+                      borderRadius: BorderRadius.circular(15.0), // Coins arrondis sur tous les côtés
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          spreadRadius: 2.0,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'Cliquez pour y aller !',
+                        style: TextStyle(
+                          color: Colors.white, // Couleur du texte
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
+                  ),
+                ),
               ),
               builder: (context, markers) {
                 return Container(
@@ -1063,8 +1083,74 @@ class MobileView {
               },
             ),
           ),
-          MarkerLayer(markers: nonClusteredMarkers),
-          PolylineLayer(
+          MarkerClusterLayerWidget(
+            options:
+            MarkerClusterLayerOptions(
+              spiderfyCircleRadius: 80,
+              spiderfySpiralDistanceMultiplier: 2,
+              circleSpiralSwitchover: 12,
+              maxClusterRadius: 120,
+              rotate: true,
+              size: const Size(40, 40),
+              alignment: Alignment.center,
+              padding: const EdgeInsets.all(50),
+              maxZoom: 15,
+              markers: markersClustered,
+              popupOptions: PopupOptions(
+                popupSnap: PopupSnap.markerTop,
+                popupController: popupcontroller,
+                popupBuilder: (_, marker) => GestureDetector(
+                  onTap: () {
+                    fetchRoute(currentPosition!, marker.point);
+                    showRouteInfoDialog(context, getDistance(), getIncidentCount());
+                    popupcontroller.hideAllPopups();
+                  },
+                  child: Container(
+                    width: 150, // Réduire la largeur
+                    height: 70, // Réduire la hauteur
+                    padding: const EdgeInsets.all(8.0),
+                    decoration: BoxDecoration(
+                      color: global.primary, // Utiliser la couleur primaire du thème
+                      borderRadius: BorderRadius.circular(15.0), // Coins arrondis sur tous les côtés
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          spreadRadius: 2.0,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'Cliquez pour y aller !',
+                        style: TextStyle(
+                          color: Colors.white, // Couleur du texte
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+
+              builder: (context, markers) {
+                return Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: global.primary,
+                  ),
+                  child: Center(
+                    child: Text(
+                      markers.length.toString(),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),          PolylineLayer(
             polylines: [
               Polyline(
                 points: routePoints,

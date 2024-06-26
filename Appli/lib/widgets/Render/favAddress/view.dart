@@ -130,6 +130,8 @@ class MobileView {
               CustomButton(
                 text: 'AFFICHER SUR LA CARTE',
                 callbackFunction: () {
+                  print(infos.latitude);
+                  print(infos.longitude);
                   context.go('/map?latitude=${infos.latitude}&longitude=${infos.longitude}');
                 },
                 height: 40,
