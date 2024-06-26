@@ -19,6 +19,16 @@ class ApiService {
     }
   }
 
+  Future<void> deleteFavoritePlace(int id) async {
+    final response = await http.delete(Uri.parse('https://wa-prod-vel-01.azurewebsites.net/api/FavoritePlace/$id'));
 
+    if (response.statusCode == 204) {
+      // Suppression réussie (204 No Content)
+      print('Favorite place with id $id deleted successfully');
+    } else {
+      // Gestion des erreurs
+      throw Exception('Failed to delete favorite place with id $id');
+    }
+  }
 
 }
