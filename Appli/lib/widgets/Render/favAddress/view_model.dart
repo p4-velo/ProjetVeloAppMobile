@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:projet_velo_app_mobile/POO/fav_address_infos.dart';
-import 'package:projet_velo_app_mobile/providers/test_provider.dart';
+import '../../../ApiService.dart';
+import '../../../POO/FavoritePlace.dart';
 import 'view.dart';
 
 class FavAddress extends StatefulWidget {
@@ -14,55 +14,48 @@ class FavAddress extends StatefulWidget {
 
 class FavAddressState extends State<FavAddress> {
   bool isLoading = false;
-  List<FavAddressInfo> favAddressList = [
-    FavAddressInfo(name: 'Maison', address: '35 Rue Béranger, 21000 Dijon'),
-    FavAddressInfo(name: 'Travail', address: '26 Bd Georges Clemenceau, 21000 Dijon'),
-    FavAddressInfo(name: 'Salle de sport', address: '56 Av. du Drapeau, 21000 Dijon'),
-    FavAddressInfo(name: 'Adresse favorite 1', address: '19 Rue du Nivernais, 21121 Fontaine-lès-Dijon'),
-  ];
-  String text = "Failed";
+  List<FavoritePlace> favAddressList = [];
 
-  void startLoading() async {
+  @override
+  void initState() {
+    super.initState();
+    fetchAndSetFavoritePlaces();
+  }
+
+  void startLoading() {
     setState(() {
       isLoading = true;
     });
   }
 
-  void stopLoading() async {
+  void stopLoading() {
     setState(() {
       isLoading = false;
     });
   }
 
-  @override
-  void dispose() {
-    super.dispose();
+  Future<void> fetchAndSetFavoritePlaces() async {
+    startLoading();
+    try {
+      ApiService apiService = ApiService();
+      List<FavoritePlace> favoritePlaces = await apiService.fetchFavoritePlaces(1);
+
+      setState(() {
+        favAddressList = favoritePlaces;
+      });
+    } catch (e) {
+      print("Erreur requête: $e");
+    }
+    stopLoading();
   }
 
-  @override
-  void initState() {
-    super.initState();
-  }
 
-  Future<void> getTexteTest() async {
-  startLoading();
-  try {
-    TestProvider testProvider = TestProvider();
-    text = await testProvider.getTest();
-  } catch (e) {
-    print("Erreur requête");
-  }
-  stopLoading();
-}
-  
   @override
   Widget build(BuildContext context) {
     var currentView = MobileView(
       context: context,
       isLoading: isLoading,
       favAddressList: favAddressList,
-      getTexteTest: getTexteTest,
-      text: text
     );
 
     return currentView.render();

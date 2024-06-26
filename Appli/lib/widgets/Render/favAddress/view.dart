@@ -1,22 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:projet_velo_app_mobile/POO/fav_address_infos.dart';
 import 'package:projet_velo_app_mobile/global.dart'as global;
 import 'package:projet_velo_app_mobile/widgets/CustomWidget/CustomButton/view_model.dart';
+
+import '../../../POO/FavoritePlace.dart';
 
 class MobileView {
   BuildContext context;
   bool isLoading;
-  List<FavAddressInfo> favAddressList;
-  Function getTexteTest;
-  String text;
-  
+  List<FavoritePlace> favAddressList;
+
 
   MobileView({
     required this.context,
     required this.isLoading,
     required this.favAddressList,
-    required this.getTexteTest,
-    required this.text
   });
 
   render() {
@@ -45,7 +42,6 @@ class MobileView {
                 ],
               ),
               const SizedBox(height: 20),
-              Text(text),
               Expanded(
                 child: ListView(
                   children: [
@@ -61,7 +57,7 @@ class MobileView {
     );
   }
 
-  Widget favAddressTile(FavAddressInfo infos) {
+  Widget favAddressTile(FavoritePlace infos) {
     return Column(
       children: [
         SizedBox(
@@ -108,7 +104,6 @@ class MobileView {
               CustomButton(
                 text: 'AFFICHER SUR LA CARTE',
                 callbackFunction: ()  {
-                  getTexteTest();
                 },
                 height: 40,
                 width: double.infinity,
