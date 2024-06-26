@@ -5,6 +5,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:open_street_map_search_and_pick/open_street_map_search_and_pick.dart';
+import 'package:projet_velo_app_mobile/ApiService.dart';
+import '../../../POO/FavoritePlace.dart';
 import '../../../ApiService.dart';
 import '../../../POO/ArceauxVelos.dart';
 import '../../../POO/Incident.dart';
@@ -80,6 +82,9 @@ class MapState extends State<Home> {
   LatLng? favoritePlace;
   List<ArceauxVelos> arceauxVelos = [];
 
+  List<FavoritePlace> favAddressList = [];
+
+
 
   final TextEditingController _controllerText = TextEditingController();
 
@@ -97,7 +102,7 @@ class MapState extends State<Home> {
 
   @override
   void initState() {
-
+    fetchAndSetFavoritePlaces();
     addFavoriteMarkerIfIsAsked();
     checkInternetConnection();
     _determinePosition();
@@ -161,6 +166,7 @@ class MapState extends State<Home> {
       isNavigating: isNavigating,
       controllerText: _controllerText,
       favoritePlace: favoritePlace,
+      favAddressList: favAddressList,
 
     );
     return currentView.render();
@@ -769,12 +775,26 @@ class MapState extends State<Home> {
     }
   }
 
-  Future<void> fetchArceauxVelosData() async {
+  Future<void> fetchAndSetFavoritePlaces() async {
+    try {
+      ApiService apiService = ApiService();
+      List<FavoritePlace> favoritePlaces = await apiService.fetchFavoritePlaces(1);
+  
+
+      setState(() {
+        favAddressList = favoritePlaces;
+      });
+    } catch (e) {
+      print("Erreur requête: $e");
+    }
+  }
+
+
+Future<void> fetchArceauxVelosData() async {
     ApiService apiService = ApiService();
     final random = Random();
     try {
       List<ArceauxVelos> arceauxVelos = await apiService.fetchArceauxVelos();
-
       for (var arceau in arceauxVelos) {
         final incidentType = IncidentType(name: 'Arceaux', icon: Icons.bike_scooter);
         final location = Localisation(

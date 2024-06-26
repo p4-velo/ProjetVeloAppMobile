@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:projet_velo_app_mobile/global.dart' as global;
 import 'package:projet_velo_app_mobile/widgets/CustomWidget/CustomLoader/view_model.dart';
+import '../../../POO/FavoritePlace.dart';
 import '../../../POO/IncidentType.dart';
 
 
@@ -51,6 +52,7 @@ class MobileView {
   bool isNavigating;
   final TextEditingController controllerText;
   LatLng? favoritePlace;
+  List<FavoritePlace> favAddressList;
 
 
   MobileView({
@@ -92,6 +94,7 @@ class MobileView {
     required this.isNavigating,
     required this.controllerText,
     required this.favoritePlace,
+    required this.favAddressList,
   });
 
   final TextStyle selectedTextStyle = const TextStyle(
@@ -495,7 +498,9 @@ class MobileView {
     String inputText = '';
     String addressStartPoint = '';
     String? selectedFavoriteAddress;
-    List<String> favoriteAddresses = ['Adresse 1', 'Adresse 2', 'Adresse 3'];
+    List<String> favoriteAddresses = [
+      favAddressList[0].name,
+    ];
 
     showDialog(
       context: context,
@@ -640,11 +645,10 @@ class MobileView {
                     RadioListTile<int>(
                       title: DropdownButton<String>(
                         value: selectedFavoriteAddress,
-                        items: favoriteAddresses
-                            .map((String address) {
+                        items: favAddressList.map((FavoritePlace place) {
                           return DropdownMenuItem<String>(
-                            value: address,
-                            child: Text(address),
+                            value: place.name,
+                            child: Text(place.name),
                           );
                         }).toList(),
                         onChanged: selectedOption == 3
@@ -725,9 +729,35 @@ class MobileView {
                             }
                             break;
                           case 3:
-                            print('Option 3 selected');
-                            Navigator.of(context)
-                                .pop(); // Fermer la boîte de dialogue après avoir terminé
+                            if (selectedFavoriteAddress != null) {
+                              debugPrint('Start with favorite address: $selectedFavoriteAddress');
+                              FavoritePlace? favoritePlace = favAddressList.firstWhere((place) => place.name == selectedFavoriteAddress);
+                              LatLng startPoint = LatLng(double.parse(favoritePlace.longitude), double.parse(favoritePlace.latitude));
+                              await fetchRoute(startPoint, endPoint);
+                              Navigator.of(context).pop(); // Fermer la boîte de dialogue après avoir terminé
+                              double distance = getDistance();
+                              int incidentCount = getIncidentCount();
+                              showRouteInfoDialog(context, distance, incidentCount);
+                            } else {
+                              debugPrint('No favorite address selected');
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text('Adresse favorite non sélectionnée'),
+                                    content: const Text('Vous devez sélectionner une adresse favorite.'),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop(); // Fermer la boîte de dialogue
+                                        },
+                                        child: const Text('Fermer'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            }
                             break;
                         }
                       }
