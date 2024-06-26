@@ -50,6 +50,7 @@ class MobileView {
   bool showNoResult;
   bool isNavigating;
   final TextEditingController controllerText;
+  LatLng? favoritePlace;
 
 
   MobileView({
@@ -90,6 +91,7 @@ class MobileView {
     required this.showNoResult,
     required this.isNavigating,
     required this.controllerText,
+    required this.favoritePlace,
   });
 
   final TextStyle selectedTextStyle = const TextStyle(
@@ -129,6 +131,7 @@ class MobileView {
                 nonClusteredMarkers: nonClusteredMarkers,
                 routePoints: routePoints,
                 context: context,
+                favoritePlace: favoritePlace,
                 setState: setState,
               ),
 
@@ -994,6 +997,7 @@ class MobileView {
     required List<Marker> nonClusteredMarkers,
     required List<LatLng> routePoints,
     required BuildContext context,
+    required LatLng? favoritePlace,
     required StateSetter setState
   }) {
     return PopupScope(
@@ -1001,7 +1005,7 @@ class MobileView {
       child: FlutterMap(
         mapController: mapController,
         options: MapOptions(
-          initialCenter: currentPosition ?? points[0],
+          initialCenter: favoritePlace ?? currentPosition ?? points[0],
           initialZoom: 14,
           maxZoom: 20,
           onTap: (_, __) { // si on clique sur la map n'importe ou

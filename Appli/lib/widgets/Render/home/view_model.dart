@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:open_street_map_search_and_pick/open_street_map_search_and_pick.dart';
 import '../../../POO/Incident.dart';
 import '../../../POO/IncidentType.dart';
 import '../../../POO/Localisation.dart';
@@ -24,7 +25,10 @@ import 'package:projet_velo_app_mobile/global.dart' as global;
 
 
 class Home extends StatefulWidget {
-  const Home({super.key});
+  final String? latitude;
+  final String? longitude;
+
+  const Home({Key? key, this.latitude, this.longitude}) : super(key: key);
 
   @override
   MapState createState() {
@@ -71,6 +75,9 @@ class MapState extends State<Home> {
   bool showNoResult = false;
   bool? hasLocalisationPermission;
 
+  LatLng? favoritePlace;
+
+
   final TextEditingController _controllerText = TextEditingController();
 
 
@@ -88,6 +95,7 @@ class MapState extends State<Home> {
   @override
   void initState() {
 
+    addFavoriteMarkerIfIsAsked();
     checkInternetConnection();
     _determinePosition();
     _startCompassAndLocalisationStream();
@@ -148,6 +156,7 @@ class MapState extends State<Home> {
       showNoResult: showNoResult,
       isNavigating: isNavigating,
       controllerText: _controllerText,
+      favoritePlace: favoritePlace,
 
     );
     return currentView.render();
@@ -736,6 +745,19 @@ class MapState extends State<Home> {
     } else {
       setState(() {
         internetLoading = false;
+      });
+    }
+  }
+  void addFavoriteMarkerIfIsAsked() {
+    if (widget.latitude != null && widget.longitude != null) {
+      favoritePlace = LatLng(double.parse(widget.latitude!), double.parse(widget.longitude!));
+      setState(() {
+        nonClusteredMarkers.add(
+          Marker(
+            point: favoritePlace!,
+            child: const Icon(Icons.star, color: Colors.yellow), // Utilisez l'icône de favori
+          ),
+        );
       });
     }
   }

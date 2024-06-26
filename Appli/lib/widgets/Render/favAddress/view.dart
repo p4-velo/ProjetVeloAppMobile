@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:projet_velo_app_mobile/global.dart'as global;
 import 'package:projet_velo_app_mobile/widgets/CustomWidget/CustomButton/view_model.dart';
 
@@ -104,6 +105,7 @@ class MobileView {
               CustomButton(
                 text: 'AFFICHER SUR LA CARTE',
                 callbackFunction: ()  {
+                  context.go('/map?latitude=${infos.latitude}&longitude=${infos.longitude}');
                 },
                 height: 40,
                 width: double.infinity,
