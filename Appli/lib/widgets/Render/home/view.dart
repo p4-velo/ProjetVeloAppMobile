@@ -501,6 +501,7 @@ class MobileView {
     List<String> favoriteAddresses = [
       favAddressList[0].name,
     ];
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -644,11 +645,10 @@ class MobileView {
                     RadioListTile<int>(
                       title: DropdownButton<String>(
                         value: selectedFavoriteAddress,
-                        items: favoriteAddresses
-                            .map((String address) {
+                        items: favAddressList.map((FavoritePlace place) {
                           return DropdownMenuItem<String>(
-                            value: address,
-                            child: Text(address),
+                            value: place.name,
+                            child: Text(place.name),
                           );
                         }).toList(),
                         onChanged: selectedOption == 3
@@ -729,9 +729,35 @@ class MobileView {
                             }
                             break;
                           case 3:
-                            print('Option 3 selected');
-                            Navigator.of(context)
-                                .pop(); // Fermer la boîte de dialogue après avoir terminé
+                            if (selectedFavoriteAddress != null) {
+                              debugPrint('Start with favorite address: $selectedFavoriteAddress');
+                              FavoritePlace? favoritePlace = favAddressList.firstWhere((place) => place.name == selectedFavoriteAddress);
+                              LatLng startPoint = LatLng(double.parse(favoritePlace.longitude), double.parse(favoritePlace.latitude));
+                              await fetchRoute(startPoint, endPoint);
+                              Navigator.of(context).pop(); // Fermer la boîte de dialogue après avoir terminé
+                              double distance = getDistance();
+                              int incidentCount = getIncidentCount();
+                              showRouteInfoDialog(context, distance, incidentCount);
+                            } else {
+                              debugPrint('No favorite address selected');
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text('Adresse favorite non sélectionnée'),
+                                    content: const Text('Vous devez sélectionner une adresse favorite.'),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop(); // Fermer la boîte de dialogue
+                                        },
+                                        child: const Text('Fermer'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            }
                             break;
                         }
                       }
