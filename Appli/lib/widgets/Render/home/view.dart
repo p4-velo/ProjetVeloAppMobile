@@ -167,7 +167,7 @@ class MobileView {
                       ? buildInternetDialog(context)
                       : !hasUserLocation && hasLocalisationPermission != null &&
                       hasLocalisationPermission! && !internetLoading
-                      ? buildLoaderMyLoacalisation(context)
+                      ? buildLoaderMyLocalisation(context)
                       : Container(),
                   if(isLoadingPage) Expanded(
                     child: loaderInSizedBox(size: 50),),
@@ -811,8 +811,7 @@ class MobileView {
     );
   }
 
-  void showRouteInfoDialog(BuildContext context, double distance,
-      int incidentCount) {
+  void showRouteInfoDialog(BuildContext context, double distance, int incidentCount) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -829,47 +828,48 @@ class MobileView {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                TextButton(
-                  onPressed: () {
-                    controllerText.clear(); // clear the text field
-                    Navigator.of(context).pop();
-                  },
-                  style: TextButton.styleFrom(
-                    backgroundColor: global.tertiary,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(150, 36),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12), // Réduit le padding vertical
-                  ),
-                  child: const Text(
-                    'Voir le trajet',
-                    style: TextStyle(
-                      fontSize: 14,
+                Expanded(
+                  child: TextButton(
+                    onPressed: () {
+                      controllerText.clear(); // clear the text field
+                      Navigator.of(context).pop();
+                    },
+                    style: TextButton.styleFrom(
+                      backgroundColor: global.tertiary,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(0, 36), // Ajuste la taille minimum pour qu'elle soit réactive
+                      padding: const EdgeInsets.symmetric(vertical: 12), // Réduit le padding vertical
+                    ),
+                    child: const Text(
+                      'Voir le trajet',
+                      style: TextStyle(
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center, // Centrer le texte
                     ),
                   ),
                 ),
-
-                const SizedBox(width: 16),
-                // Ajoute un espace de 16 pixels entre les boutons
-
-                TextButton(
-                  onPressed: () {
-                    controllerText.clear(); // clear the text field
-                    Navigator.of(context).pop();
-                    navigation(true);
-                  },
-                  style: TextButton.styleFrom(
-                    backgroundColor: global.secondary,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(150, 36),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12), // Réduit le padding vertical
-                  ),
-                  child: const Text(
-                    'Lancer navigation !',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
+                const SizedBox(width: 8), // Ajuste l'espace entre les boutons
+                Expanded(
+                  child: TextButton(
+                    onPressed: () {
+                      controllerText.clear(); // clear the text field
+                      Navigator.of(context).pop();
+                      navigation(true);
+                    },
+                    style: TextButton.styleFrom(
+                      backgroundColor: global.secondary,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(0, 36), // Ajuste la taille minimum pour qu'elle soit réactive
+                      padding: const EdgeInsets.symmetric(vertical: 12), // Réduit le padding vertical
+                    ),
+                    child: const Text(
+                      'Lancer navigation',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center, // Centrer le texte
                     ),
                   ),
                 ),
@@ -880,6 +880,7 @@ class MobileView {
       },
     );
   }
+
 
   Future<void> checkPermissionAndFetchLocation(BuildContext context,
       LatLng endPoint) async {
@@ -1196,29 +1197,34 @@ class MobileView {
 
 
   Widget buildInternetDialog(BuildContext context) {
-    return Expanded(
-      child: Center(
-        child: AlertDialog(
-          content: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // CircularProgressIndicator(),
-              SizedBox(width: 20),
-              Text("Veuillez vous connecter à internet"),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                checkInternetConnection();
-              },
-              child: const Text("Réessayer"),
+    return Center(
+      child: AlertDialog(
+        content: Row(
+          mainAxisSize: MainAxisSize.min, // Permet au contenu de s'adapter à sa taille minimale
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            // CircularProgressIndicator(),
+            SizedBox(width: 20),
+            Expanded(
+              child: Text(
+                "Veuillez vous connecter à internet",
+                textAlign: TextAlign.center, // Centre le texte pour une meilleure apparence
+              ),
             ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              checkInternetConnection();
+            },
+            child: const Text("Réessayer"),
+          ),
+        ],
       ),
     );
   }
+
 
 
   Widget buildLocationWarning() {
@@ -1238,22 +1244,27 @@ class MobileView {
   }
 
 
-  Widget buildLoaderMyLoacalisation(BuildContext context) {
-    return const Expanded(
-      child: Center(
-        child: AlertDialog(
-          content: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 20),
-              Text("Chargement de votre localisation en cours..."),
-            ],
-          ),
+  Widget buildLoaderMyLocalisation(BuildContext context) {
+    return Center(
+      child: AlertDialog(
+        content: Row(
+          mainAxisSize: MainAxisSize.min, // Permet au contenu de s'adapter à sa taille minimale
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            CircularProgressIndicator(),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                "Chargement de votre localisation en cours...",
+                textAlign: TextAlign.center, // Centre le texte pour une meilleure apparence
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+
 
 
   Widget buildListAddressResult({
