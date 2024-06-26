@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'view.dart';
 
 class CustomTextField extends StatefulWidget {
+  final TextEditingController controller;
   final String hintText;
   final Icon? icon;
+  final bool isEmpty;
 
   const CustomTextField({
+    required this.controller,
     required this.hintText,
     this.icon,
+    required this.isEmpty,
     super.key
   });
 
@@ -20,8 +25,7 @@ class CustomTextField extends StatefulWidget {
 class CustomTextFieldState extends State<CustomTextField> {
   bool isLoading = false;
   dynamic formKey = GlobalKey<FormState>();
-  bool isValid = true;
-  String? message;
+  FocusNode focusNode = FocusNode();
 
 
   void startLoading() async {
@@ -37,25 +41,17 @@ class CustomTextFieldState extends State<CustomTextField> {
   }
 
   @override
-  void dispose() {
-    super.dispose();
+  void initState() {
+    super.initState();
+    focusNode.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  void customValidator(String? value) {
-    if (value == null || value.isEmpty) {
-      setState(() {
-        isValid = false;
-      });
-      message = 'Ce champ ne peut pas être vide';
-    }
-    setState(() {
-        isValid = true;
-    });
+  void dispose() {
+    focusNode.dispose();
+    super.dispose();
   }
   
   @override
@@ -65,9 +61,9 @@ class CustomTextFieldState extends State<CustomTextField> {
       isLoading: isLoading,
       hintText: widget.hintText,
       icon: widget.icon,
-      customValidator: customValidator,
-      isValid: isValid,
-      message: message
+      controller: widget.controller,
+      isEmpty: widget.isEmpty,
+      focusNode: focusNode
     );
 
     return currentView.render();

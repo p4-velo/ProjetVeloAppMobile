@@ -13,6 +13,14 @@ class SignUp extends StatefulWidget {
 class SignUpState extends State<SignUp> {
   bool isLoading = false;
   dynamic formKey = GlobalKey<FormState>();
+  TextEditingController controllerUsername = TextEditingController();
+  TextEditingController controllerEmail = TextEditingController();
+  TextEditingController controllerPassword = TextEditingController();
+  TextEditingController controllerConfirmPwd = TextEditingController();
+  bool isEmptyUsername = false;
+  bool isEmptyEmail = false;
+  bool isEmptyPassword = false;
+  bool isEmptyConfirmPwd = false;
 
 
   void startLoading() async {
@@ -38,9 +46,12 @@ class SignUpState extends State<SignUp> {
   }
 
   Future<void> validateSignUp() async {
-    if(formKey.currentState!.validate()) {
-
-    }
+    setState(() {
+      isEmptyUsername = controllerUsername.text.isEmpty;
+      isEmptyEmail = controllerEmail.text.isEmpty;
+      isEmptyPassword = controllerPassword.text.isEmpty;
+      isEmptyConfirmPwd = controllerConfirmPwd.text.isEmpty;
+    });
   }
   
   @override
@@ -49,7 +60,15 @@ class SignUpState extends State<SignUp> {
       context: context,
       isLoading: isLoading,
       formKey: formKey,
-      validateSignUp: validateSignUp
+      validateSignUp: validateSignUp,
+      controllerUsername: controllerUsername,
+      controllerEmail: controllerEmail,
+      controllerPassword: controllerPassword,
+      controllerConfirmPwd: controllerConfirmPwd,
+      isEmptyUsername: isEmptyUsername,
+      isEmptyEmail: isEmptyEmail,
+      isEmptyPassword: isEmptyPassword,
+      isEmptyConfirmPwd: isEmptyConfirmPwd
     );
 
     return currentView.render();
