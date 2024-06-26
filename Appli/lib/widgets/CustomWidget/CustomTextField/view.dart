@@ -8,8 +8,9 @@ class MobileView {
   String hintText;
   Icon? icon;
   TextEditingController controller;
-  bool isEmpty;
+  bool isError;
   FocusNode focusNode;
+  String errorType;
 
   MobileView({
     required this.context,
@@ -17,14 +18,15 @@ class MobileView {
     required this.hintText,
     this.icon,
     required this.controller,
-    required this.isEmpty,
-    required this.focusNode
+    required this.isError,
+    required this.focusNode,
+    required this.errorType
   });
 
   render() {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        return !isEmpty ? Container(
+        return !isError ? Container(
           width: constraints.maxWidth,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30),
@@ -91,7 +93,7 @@ class MobileView {
                     width: 20,
                   ),
                   Text(
-                    isEmpty ? "Veuillez remplir ce champ" : "",
+                    errorType == "Empty" ? "Veuillez remplir ce champ" : errorType == "Email" ? "Adresse Email invalide" : errorType == "Password" ? "Les mots de passe ne sont pas identiques" : "",
                     style: TextStyle(
                       color: global.deleteColor
                     ),

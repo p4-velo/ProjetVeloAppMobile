@@ -6,13 +6,15 @@ class CustomTextField extends StatefulWidget {
   final TextEditingController controller;
   final String hintText;
   final Icon? icon;
-  final bool isEmpty;
+  final bool isError;
+  final String errorType;
 
   const CustomTextField({
     required this.controller,
     required this.hintText,
     this.icon,
-    required this.isEmpty,
+    required this.isError,
+    required this.errorType,
     super.key
   });
 
@@ -62,8 +64,9 @@ class CustomTextFieldState extends State<CustomTextField> {
       hintText: widget.hintText,
       icon: widget.icon,
       controller: widget.controller,
-      isEmpty: widget.isEmpty,
-      focusNode: focusNode
+      isError: widget.isError,
+      focusNode: focusNode,
+      errorType: widget.errorType
     );
 
     return currentView.render();

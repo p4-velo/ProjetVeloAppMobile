@@ -14,10 +14,14 @@ class MobileView {
   TextEditingController controllerEmail;
   TextEditingController controllerPassword;
   TextEditingController controllerConfirmPwd;
-  bool isEmptyUsername;
-  bool isEmptyEmail;
-  bool isEmptyPassword;
-  bool isEmptyConfirmPwd;
+  bool isErrorUsername;
+  bool isErrorEmail;
+  bool isErrorPassword;
+  bool isErrorConfirmPwd;
+  String errorTypeUsername;
+  String errorTypeEmail;
+  String errorTypePassword;
+  String errorTypeConfirmPwd;
 
   MobileView({
     required this.context,
@@ -28,10 +32,14 @@ class MobileView {
     required this.controllerEmail,
     required this.controllerPassword,
     required this.controllerConfirmPwd,
-    required this.isEmptyUsername,
-    required this.isEmptyEmail,
-    required this.isEmptyPassword,
-    required this.isEmptyConfirmPwd
+    required this.isErrorUsername,
+    required this.isErrorEmail,
+    required this.isErrorPassword,
+    required this.isErrorConfirmPwd,
+    required this.errorTypeUsername,
+    required this.errorTypeEmail,
+    required this.errorTypePassword,
+    required this.errorTypeConfirmPwd
   });
 
   render() {
@@ -75,7 +83,8 @@ class MobileView {
                           const SizedBox(height: 10),
                           CustomTextField(
                             controller: controllerUsername,
-                            isEmpty: isEmptyUsername,
+                            isError: isErrorUsername,
+                            errorType: errorTypeUsername,
                             hintText: "Nom d'utilisateur",
                             icon: const Icon(
                               Icons.person,
@@ -86,7 +95,8 @@ class MobileView {
                           const SizedBox(height: 20),
                           CustomTextField(
                             controller: controllerEmail,
-                            isEmpty: isEmptyEmail,
+                            isError: isErrorEmail,
+                            errorType: errorTypeEmail,
                             hintText: "Email",
                             icon: const Icon(
                               Icons.email,
@@ -97,7 +107,8 @@ class MobileView {
                           const SizedBox(height: 20),
                           CustomTextField(
                             controller: controllerPassword,
-                            isEmpty: isEmptyPassword,
+                            isError: isErrorPassword,
+                            errorType: errorTypePassword,
                             hintText: "Mot de passe",
                             icon: const Icon(
                               Icons.lock,
@@ -108,7 +119,8 @@ class MobileView {
                           const SizedBox(height: 20),
                           CustomTextField(
                             controller: controllerConfirmPwd,
-                            isEmpty: isEmptyConfirmPwd,
+                            isError: isErrorConfirmPwd,
+                            errorType: errorTypeConfirmPwd,
                             hintText: "Confirmer mot de passe",
                             icon: const Icon(
                               Icons.lock,
