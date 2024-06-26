@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:projet_velo_app_mobile/global.dart' as global;
 import 'package:projet_velo_app_mobile/widgets/CustomWidget/CustomLoader/view_model.dart';
+import '../../../POO/FavoritePlace.dart';
 import '../../../POO/IncidentType.dart';
 
 
@@ -51,6 +52,7 @@ class MobileView {
   bool isNavigating;
   final TextEditingController controllerText;
   LatLng? favoritePlace;
+  List<FavoritePlace> favAddressList;
 
 
   MobileView({
@@ -92,6 +94,7 @@ class MobileView {
     required this.isNavigating,
     required this.controllerText,
     required this.favoritePlace,
+    required this.favAddressList,
   });
 
   final TextStyle selectedTextStyle = const TextStyle(
@@ -495,8 +498,9 @@ class MobileView {
     String inputText = '';
     String addressStartPoint = '';
     String? selectedFavoriteAddress;
-    List<String> favoriteAddresses = ['Adresse 1', 'Adresse 2', 'Adresse 3'];
-
+    List<String> favoriteAddresses = [
+      favAddressList[0].name,
+    ];
     showDialog(
       context: context,
       builder: (BuildContext context) {

@@ -5,6 +5,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:open_street_map_search_and_pick/open_street_map_search_and_pick.dart';
+import 'package:projet_velo_app_mobile/ApiService.dart';
+import '../../../POO/FavoritePlace.dart';
 import '../../../POO/Incident.dart';
 import '../../../POO/IncidentType.dart';
 import '../../../POO/Localisation.dart';
@@ -77,6 +79,9 @@ class MapState extends State<Home> {
 
   LatLng? favoritePlace;
 
+  List<FavoritePlace> favAddressList = [];
+
+
 
   final TextEditingController _controllerText = TextEditingController();
 
@@ -94,7 +99,7 @@ class MapState extends State<Home> {
 
   @override
   void initState() {
-
+    fetchAndSetFavoritePlaces();
     addFavoriteMarkerIfIsAsked();
     checkInternetConnection();
     _determinePosition();
@@ -157,6 +162,7 @@ class MapState extends State<Home> {
       isNavigating: isNavigating,
       controllerText: _controllerText,
       favoritePlace: favoritePlace,
+      favAddressList: favAddressList,
 
     );
     return currentView.render();
@@ -765,5 +771,17 @@ class MapState extends State<Home> {
     }
   }
 
+  Future<void> fetchAndSetFavoritePlaces() async {
+    try {
+      ApiService apiService = ApiService();
+      List<FavoritePlace> favoritePlaces = await apiService.fetchFavoritePlaces(1);
+
+      setState(() {
+        favAddressList = favoritePlaces;
+      });
+    } catch (e) {
+      print("Erreur requête: $e");
+    }
+  }
 
 }
