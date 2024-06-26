@@ -5,6 +5,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:open_street_map_search_and_pick/open_street_map_search_and_pick.dart';
+import '../../../ApiService.dart';
+import '../../../POO/ArceauxVelos.dart';
 import '../../../POO/Incident.dart';
 import '../../../POO/IncidentType.dart';
 import '../../../POO/Localisation.dart';
@@ -76,6 +78,7 @@ class MapState extends State<Home> {
   bool? hasLocalisationPermission;
 
   LatLng? favoritePlace;
+  List<ArceauxVelos> arceauxVelos = [];
 
 
   final TextEditingController _controllerText = TextEditingController();
@@ -111,6 +114,7 @@ class MapState extends State<Home> {
         ),
       ),
     ).toList();
+    fetchArceauxVelosData();
     selectAll();
     updateMarkerTag(_selectedIndices);
     super.initState();
@@ -762,6 +766,45 @@ class MapState extends State<Home> {
           ),
         );
       });
+    }
+  }
+
+  Future<void> fetchArceauxVelosData() async {
+    ApiService apiService = ApiService();
+    final random = Random();
+    try {
+      List<ArceauxVelos> arceauxVelos = await apiService.fetchArceauxVelos();
+
+      for (var arceau in arceauxVelos) {
+        final incidentType = IncidentType(name: 'Arceaux', icon: Icons.bike_scooter);
+        final location = Localisation(
+          id: random.nextInt(100000),
+          latitude: arceau.localisation.latitude,
+          longitude: arceau.localisation.longitude,
+        );
+        Incident incident = Incident(
+          id: arceau.id,
+          incidentType: incidentType,
+          localisation: arceau.localisation,
+        );
+        incidents.add(incident);
+
+        Marker marker = Marker(
+          point: LatLng(location.latitude, location.longitude),
+          child: Icon(
+            Icons.bike_scooter,
+            color: global.primary,
+          ),
+        );
+        List<Marker> newMarkers =List.from(markersClustered);
+        newMarkers.add(marker);
+        setState(() {
+          markersClustered = newMarkers;
+        });
+      }
+
+    } catch (error) {
+      debugPrint('Erreur lors de la récupération des arceaux vélos: $error');
     }
   }
 
