@@ -9,6 +9,7 @@ import '../../../POO/IncidentType.dart';
 import '../../../POO/Localisation.dart';
 import '../../../POO/Danger.dart';
 import '../../../POO/DangerType.dart';
+import '../../../POO/ArceauxVelos.dart';
 import 'view.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -18,6 +19,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:skeletton_projet_velo/global.dart' as global;
+// import '../../../repositories/arceaux_velos_repository.dart';
+import '../../../services/api_service.dart';
 
 
 
@@ -69,7 +72,11 @@ class MapState extends State<Home> {
   bool showAddress = true;
   bool? hasLocalisationPermission;
 
+  Marker? _endLocationMarker;
 
+  List<ArceauxVelos> arceauxVelos = [];
+
+  // final ApiService apiService = ApiService();
 
   @override
   void dispose() {
@@ -97,6 +104,7 @@ class MapState extends State<Home> {
         ),
       ),
     ).toList();
+    fetchArceauxVelosData();
     selectAll();
     updateMarkerTag(_selectedIndices);
     super.initState();
@@ -107,7 +115,7 @@ class MapState extends State<Home> {
     var currentView = MobileView(
       context: context,
       popupcontroller: _popupController,
-      markers: markers,
+      markers: [...markers, if (_endLocationMarker != null) _endLocationMarker!],
       points: points,
       incidentsTypes: _incidentTypes,
       selectedIndices: _selectedIndices,
@@ -139,7 +147,7 @@ class MapState extends State<Home> {
       isLoadingPage: isLoadingPage,
       showAddress: showAddress,
       isNavigating: isNavigating,
-
+      fetchArceauxVelosData: fetchArceauxVelosData,
     );
     return currentView.render();
   }
@@ -197,20 +205,21 @@ class MapState extends State<Home> {
     return filteredIncidents;
   }
 
-  void addMarker(LatLng point) {
-    Marker marker = Marker(
-      point: point,
-      child: const Icon(
-        Icons.location_on,
-        color: Colors.red, // Choisissez la couleur que vous voulez
-      ),
-    );
-    List<Marker> newMarkers =List.from(markers);
-    newMarkers.add(marker);
+  void addMarker(LatLng point, {bool isEndLocation = false}) {
+  Marker marker = Marker(
+    point: point,
+    child: const Icon(
+      Icons.location_on,
+      color: Colors.red,
+    ),
+  );
+
+  if (isEndLocation) {
     setState(() {
-      markers = newMarkers;
+      _endLocationMarker = marker;
     });
-  }
+  } 
+}
 
   void updateMarkerUser(LatLng point, double heading, {bool withMoveCamera = false}) {
     double mapRotation = _mapController.camera.rotation;
@@ -242,7 +251,6 @@ class MapState extends State<Home> {
 
     });
   }
-
 
   void addMarkerTest(LatLng point, String incidentName) async {
 
@@ -552,18 +560,25 @@ class MapState extends State<Home> {
     return formattedAddress;
   }
 
+  double _duration = 0.0;
   double _routeDistance = 0.0;
   int _incidentCount = 0;
 
   Future<void> _fetchRoute(LatLng startRoute, LatLng endRoute ) async {
-    final String url = 'http://router.project-osrm.org/route/v1/bike/${startRoute.longitude},${startRoute.latitude};${endRoute.longitude},${endRoute.latitude}?geometries=geojson';
+    final String url = 'http://router.project-osrm.org/route/v1/cycling/${startRoute.longitude},${startRoute.latitude};${endRoute.longitude},${endRoute.latitude}?geometries=geojson';
+
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       final List<dynamic> coordinates = data['routes'][0]['geometry']['coordinates'];
       
-      final double distance = data['routes'][0]['distance']/1000;
-      
+      double distance = data['routes'][0]['distance'];
+
+      final double duration = data['routes'][0]['duration'];
+
+      selectAll();
+      updateMarkerTag(_selectedIndices);
+
       setState(() {
         routePoints = coordinates.map((point) => LatLng(point[1], point[0])).toList();
         List<LatLng> interpolatedRoutePoints = interpolatePoints(routePoints, 50.0);
@@ -571,14 +586,19 @@ class MapState extends State<Home> {
 
         _routeDistance = distance;
         _incidentCount = incidentCount;
+        _duration = duration;
 
-        addMarker(endRoute);
+        addMarker(endRoute, isEndLocation: true);
         _mapController.fitBounds(LatLngBounds.fromPoints([startRoute, endRoute]));   //zoom bon pour tout voir
       });
 
     } else {
       print('Failed to load route');
     }
+  }
+
+  double getDuration() {
+    return _duration;
   }
 
   double getDistance(){
@@ -594,8 +614,6 @@ class MapState extends State<Home> {
       isNavigating = navigation;
     });
   }
-
-
 
   Future<LatLng> _getCurrentLocation() async {
     Position position = await Geolocator.getCurrentPosition(
@@ -706,11 +724,9 @@ class MapState extends State<Home> {
         _currentPosition = LatLng(position.latitude, position.longitude);
       });
     } catch (e) {
-      print('Error while determining position: $e');
+      debugPrint('Error while determining position: $e');
     }
   }
-
-
 
   Future<void> checkInternetConnection() async {
     var connectivityResult = await (Connectivity().checkConnectivity());
@@ -720,6 +736,7 @@ class MapState extends State<Home> {
       setState(() {
         internetLoading = true;
       });
+    
     } else {
       setState(() {
         internetLoading = false;
@@ -727,5 +744,42 @@ class MapState extends State<Home> {
     }
   }
 
+  Future<void> fetchArceauxVelosData() async {
+    ApiService apiService = ApiService();
+    final random = Random();
+    try {
+      List<ArceauxVelos> arceauxVelos = await apiService.fetchArceauxVelos();
+      
+      for (var arceau in arceauxVelos) {
+        final incidentType = IncidentType(name: 'Arceaux', icon: Icons.bike_scooter);
+        final location = Localisation(
+          id: random.nextInt(100000),
+          latitude: arceau.localisation.latitude,
+          longitude: arceau.localisation.longitude,
+        );
+        Incident incident = Incident(
+            id: arceau.id,
+            incidentType: incidentType,
+            localisation: arceau.localisation,
+          );
+          incidents.add(incident);
 
+          Marker marker = Marker(
+            point: LatLng(location.latitude, location.longitude),
+            child: Icon(
+              Icons.bike_scooter,
+              color: global.primary,
+            ),
+          );
+          List<Marker> newMarkers =List.from(markers);
+          newMarkers.add(marker);
+          setState(() {
+            markers = newMarkers;
+          });
+        }
+
+    } catch (error) {
+      debugPrint('Erreur lors de la récupération des arceaux vélos: $error');
+    }
+  }
 }

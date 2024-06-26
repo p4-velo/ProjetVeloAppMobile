@@ -7,6 +7,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:skeletton_projet_velo/global.dart' as global;
 import 'package:skeletton_projet_velo/widgets/CustomWidget/CustomLoader/view_model.dart';
 import '../../../POO/IncidentType.dart';
+// import '../../../services/api_service.dart';
+
 
 
 
@@ -49,6 +51,8 @@ class MobileView {
   bool showAddress;
   bool isNavigating;
 
+  Function fetchArceauxVelosData;
+
   MobileView({
     required this.context,
     required this.popupcontroller,
@@ -84,6 +88,7 @@ class MobileView {
     required this.isLoadingPage,
     required this.showAddress,
     required this.isNavigating,
+    required this.fetchArceauxVelosData,
   });
 
   final TextStyle selectedTextStyle = const TextStyle(
@@ -271,6 +276,8 @@ class MobileView {
                       children: [
                         ElevatedButton(
                           onPressed: () {
+                            // fetchArceauxVelosData();
+
                             setState(() {
                               selectedButton = 'inondation';
                             });
@@ -340,6 +347,8 @@ class MobileView {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () {
+                        // ApiService apiservice = ApiService();
+                        // fetchArceauxVelosData();
                         Navigator.of(context).pop();
                       },
                       style: ElevatedButton.styleFrom(
