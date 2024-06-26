@@ -35,11 +35,18 @@ class AppRouter {
         ),
         GoRoute(
           path: '/map',
-          pageBuilder: (context, state) => CustomTransitionPage(
-            transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
-            child: const MapPage(),
-          )
+          pageBuilder: (context, state) {
+            final latitude = state.uri.queryParameters['latitude'];
+            final longitude = state.uri.queryParameters['longitude'];
+
+            return CustomTransitionPage(
+              transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
+              child: MapPage(latitude: latitude, longitude: longitude),
+            );
+          },
         ),
+
+
         GoRoute(
           path: '/favaddress',
           pageBuilder: (context, state) => CustomTransitionPage(
