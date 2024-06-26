@@ -10,12 +10,28 @@ class MobileView {
   bool isLoading;
   dynamic formKey;
   Function validateSignUp;
+  TextEditingController controllerUsername;
+  TextEditingController controllerEmail;
+  TextEditingController controllerPassword;
+  TextEditingController controllerConfirmPwd;
+  bool isEmptyUsername;
+  bool isEmptyEmail;
+  bool isEmptyPassword;
+  bool isEmptyConfirmPwd;
 
   MobileView({
     required this.context,
     required this.isLoading,
     required this.formKey,
-    required this.validateSignUp
+    required this.validateSignUp,
+    required this.controllerUsername,
+    required this.controllerEmail,
+    required this.controllerPassword,
+    required this.controllerConfirmPwd,
+    required this.isEmptyUsername,
+    required this.isEmptyEmail,
+    required this.isEmptyPassword,
+    required this.isEmptyConfirmPwd
   });
 
   render() {
@@ -57,49 +73,48 @@ class MobileView {
                             ),
                           ),
                           const SizedBox(height: 10),
-                          const CustomTextField(
+                          CustomTextField(
+                            controller: controllerUsername,
+                            isEmpty: isEmptyUsername,
                             hintText: "Nom d'utilisateur",
-                            icon: Icon(
+                            icon: const Icon(
                               Icons.person,
                               size: 22,
                               color: Colors.grey,
                             )
                           ),
                           const SizedBox(height: 20),
-                          const CustomTextField(
+                          CustomTextField(
+                            controller: controllerEmail,
+                            isEmpty: isEmptyEmail,
                             hintText: "Email",
-                            icon: Icon(
+                            icon: const Icon(
                               Icons.email,
                               size: 22,
                               color: Colors.grey,
                             )
                           ),
                           const SizedBox(height: 20),
-                          const CustomTextField(
+                          CustomTextField(
+                            controller: controllerPassword,
+                            isEmpty: isEmptyPassword,
                             hintText: "Mot de passe",
-                            icon: Icon(
+                            icon: const Icon(
                               Icons.lock,
                               size: 22,
                               color: Colors.grey,
                             )
                           ),
                           const SizedBox(height: 20),
-                          const CustomTextField(
+                          CustomTextField(
+                            controller: controllerConfirmPwd,
+                            isEmpty: isEmptyConfirmPwd,
                             hintText: "Confirmer mot de passe",
-                            icon: Icon(
+                            icon: const Icon(
                               Icons.lock,
                               size: 22,
                               color: Colors.grey,
                             )
-                          ),
-                          const SizedBox(height: 20),
-                          Container(
-                            height: 80,
-                            width: constraints.maxWidth,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(30),
-                              color: Colors.white
-                            ),
                           ),
                           const SizedBox(height: 20),
                           Row(
