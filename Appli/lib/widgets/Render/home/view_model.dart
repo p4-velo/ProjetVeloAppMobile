@@ -245,9 +245,9 @@ class MapState extends State<Home> {
       width: 80.0,
       height: 80.0,
       point: point,
-      rotate: false,
+      rotate: true,
       child: Transform.rotate(
-        angle: (heading ) * (pi / 180) - pi/4,
+        angle: (heading + mapRotation) * pi / 180 + pi,  // Ajustez l'angle de rotation
         child: const Icon(
           Icons.navigation,
           color: Colors.blue,
@@ -265,7 +265,7 @@ class MapState extends State<Home> {
       nonClusteredMarkers = List.from(nonClusteredMarkers);
       if (withMoveCamera) {
         _mapController.move(point, _mapController.camera.zoom);
-        _mapController.rotate( -_currentHeading + 45);
+        _mapController.rotate( -_currentHeading + 180 );
       }
 
     });
@@ -677,7 +677,7 @@ class MapState extends State<Home> {
   void _updateMapPosition() {
     if (_currentPosition != null) {
       _mapController.move(_currentPosition!, 18.0);
-      _mapController.rotate(-_currentHeading + 45);
+      _mapController.rotate(-_currentHeading  + 180 );
     }
     //if (isNavigating){
     //_updateMapPosition();

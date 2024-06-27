@@ -991,7 +991,7 @@ class MobileView {
         ),
         onPressed: () {
           mapController.move(currentPosition!, 18);
-          mapController.rotate(-currentHeading + 45);
+          mapController.rotate(-currentHeading + 180);
         },
         child: Icon(Icons.my_location,
           color: global.primary,
