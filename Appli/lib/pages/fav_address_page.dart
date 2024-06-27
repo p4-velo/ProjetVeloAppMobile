@@ -10,7 +10,7 @@ class FavAddressPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       child: Scaffold(
-        resizeToAvoidBottomInset: true,
+        resizeToAvoidBottomInset: false,
         body: Column(
           children: [
             Expanded(

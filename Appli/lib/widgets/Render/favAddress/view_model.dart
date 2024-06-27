@@ -15,6 +15,13 @@ class FavAddress extends StatefulWidget {
 class FavAddressState extends State<FavAddress> {
   bool isLoading = false;
   List<FavoritePlace> favAddressList = [];
+  bool openAddFavWindow = false;
+  TextEditingController controllerName = TextEditingController();
+  TextEditingController controllerAddress = TextEditingController();
+  bool isErrorName = false;
+  bool isErrorAddress = false;
+  String errorTypeName = "None";
+  String errorTypeAddress = "None";
 
   @override
   void initState() {
@@ -49,6 +56,12 @@ class FavAddressState extends State<FavAddress> {
     stopLoading();
   }
 
+  void openAddFavWindowCall() {
+    setState(() {
+      openAddFavWindow = true;
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +69,14 @@ class FavAddressState extends State<FavAddress> {
       context: context,
       isLoading: isLoading,
       favAddressList: favAddressList,
+      openAddFavWindow: openAddFavWindow,
+      openAddFavWindowCall: openAddFavWindowCall,
+      controllerName: controllerName,
+      controllerAddress: controllerAddress,
+      isErrorName: isErrorName,
+      isErrorAddress: isErrorAddress,
+      errorTypeName: errorTypeName,
+      errorTypeAddress: errorTypeAddress
     );
 
     return currentView.render();
