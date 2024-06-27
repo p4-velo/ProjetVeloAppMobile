@@ -12,8 +12,8 @@ class MobileView {
   bool isLoading;
   List<FavoritePlace> favAddressList;
   ApiService apiService = ApiService(); // Instance de votre ApiService
-  bool openAddFavWindow;
-  Function openAddFavWindowCall;
+  // bool openAddFavWindow;
+  // Function openAddFavWindowCall;
   TextEditingController controllerName;
   TextEditingController controllerAddress;
   bool isErrorName;
@@ -25,8 +25,8 @@ class MobileView {
     required this.context,
     required this.isLoading,
     required this.favAddressList,
-    required this.openAddFavWindow,
-    required this.openAddFavWindowCall,
+    // required this.openAddFavWindow,
+    // required this.openAddFavWindowCall,
     required this.controllerName,
     required this.controllerAddress,
     required this.isErrorName,
@@ -74,7 +74,7 @@ class MobileView {
                 ],
               ),
             ),
-            openAddFavWindow ? const SizedBox.shrink() : Positioned(
+            Positioned(
               bottom: 20,
               right: 20,
               child: buildButtonAdd(context),
@@ -179,7 +179,7 @@ class MobileView {
         ),
         onPressed: () {
           // Ajoutez ici la logique pour ajouter une nouvelle adresse favorite
-          addFavWindow(context);
+          // addFavWindow(context);
         },
         child: Icon(
           Icons.add,
@@ -190,68 +190,68 @@ class MobileView {
     );
   }
 
-  Future<dynamic> addFavWindow(BuildContext context) {
-    return showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          insetPadding: const EdgeInsets.all(20),
-          content: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Modifier l'adresse favorite",
-                style: TextStyle(
-                  color: global.secondary,
-                  fontWeight: FontWeight.bold
-                ),
-              ),
-              const SizedBox(height: 5),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomTextField(
-                        controller: controllerName,
-                        hintText: "Nom",
-                        isError: isErrorName,
-                        errorType: errorTypeName
-                      ),
-                      const SizedBox(height: 10),
-                      CustomTextField(
-                        controller: controllerAddress,
-                        hintText: "Adresse",
-                        isError: isErrorAddress,
-                        errorType: errorTypeAddress
-                      )
-                    ],
-                  ),
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  CustomButton(
-                    text: "Retour",
-                    callbackFunction: () {},
-                    height: 40,
-                    width: 110
-                  ),
-                  CustomButton(
-                    text: "Modifier",
-                    backgroundColor: global.secondary,
-                    textColor: Colors.white,
-                    callbackFunction: () {},
-                    height: 40,
-                    width: 110
-                  ),
-                ],
-              )
-            ],
-          ),
-        );
-      },
-    );
-  }
+  // void addFavWindow(BuildContext context) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         insetPadding: const EdgeInsets.all(20),
+  //         content: Column(
+  //           crossAxisAlignment: CrossAxisAlignment.start,
+  //           children: [
+  //             Text(
+  //               "Modifier l'adresse favorite",
+  //               style: TextStyle(
+  //                 color: global.secondary,
+  //                 fontWeight: FontWeight.bold
+  //               ),
+  //             ),
+  //             const SizedBox(height: 5),
+  //             Expanded(
+  //               child: SingleChildScrollView(
+  //                 child: Column(
+  //                   crossAxisAlignment: CrossAxisAlignment.start,
+  //                   children: [
+  //                     CustomTextField(
+  //                       controller: controllerName,
+  //                       hintText: "Nom",
+  //                       isError: isErrorName,
+  //                       errorType: errorTypeName
+  //                     ),
+  //                     const SizedBox(height: 10),
+  //                     CustomTextField(
+  //                       controller: controllerAddress,
+  //                       hintText: "Adresse",
+  //                       isError: isErrorAddress,
+  //                       errorType: errorTypeAddress
+  //                     )
+  //                   ],
+  //                 ),
+  //               ),
+  //             ),
+  //             Row(
+  //               mainAxisAlignment: MainAxisAlignment.spaceAround,
+  //               children: [
+  //                 CustomButton(
+  //                   text: "Retour",
+  //                   callbackFunction: () {},
+  //                   height: 40,
+  //                   width: 110
+  //                 ),
+  //                 CustomButton(
+  //                   text: "Modifier",
+  //                   backgroundColor: global.secondary,
+  //                   textColor: Colors.white,
+  //                   callbackFunction: () {},
+  //                   height: 40,
+  //                   width: 110
+  //                 ),
+  //               ],
+  //             )
+  //           ],
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 }
