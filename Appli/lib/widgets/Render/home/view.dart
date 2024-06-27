@@ -679,12 +679,16 @@ class MobileView {
                       if (selectedOption != null) {
                         switch (selectedOption) {
                           case 1:
-                            Navigator.of(context).pop();
                             checkPermissionAndFetchLocation(context, endPoint);
+                            LatLng userLocation = await getCurrentLocation();
+                            await fetchRoute(userLocation, endPoint);
+                            Navigator.of(context).pop();
                             double distance = getDistance();
                             int incidentCount = getIncidentCount();
-                            showRouteInfoDialog(
-                                context, distance, incidentCount);
+                            debugPrint("enDetente, distance : $distance");
+                            debugPrint("enDetente, incidents : $incidentCount \n");
+                            showRouteInfoDialog(context, distance, incidentCount);
+                            break;
 
                             break;
                           case 2:
@@ -816,11 +820,17 @@ class MobileView {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Informations sur le trajet'),
+          title: const Center(
+            child: Text('Informations sur le trajet'),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Distance à parcourir: ${distance.toStringAsFixed(2)} km'),
+              Text(
+                  distance < 1000
+                      ? 'Distance à parcourir: ${distance.toStringAsFixed(2)} m'
+                      : 'Distance à parcourir: ${(distance / 1000).toStringAsFixed(2)} km'
+              ),
               Text('Nombre d\'incidents sur la route: $incidentCount'),
             ],
           ),

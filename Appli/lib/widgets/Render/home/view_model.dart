@@ -528,21 +528,23 @@ class MapState extends State<Home> {
   }
 
   int calculateIncidentsOnRoute(List<Incident> incidents, List<LatLng> routePoints) {
-    double threshold = 0.001;
+    double threshold = 0.01;
     int incidentCount = 0;
     Distance distance = Distance();
 
     for (var incident in incidents) {
-      for (var point in routePoints) {
-        double distanceInKm = distance.as(
-          LengthUnit.Kilometer,
-          LatLng(incident.localisation.latitude, incident.localisation.longitude),
-          point,
-        );
-        // Si l'incident est à une distance inférieure au seuil, on le compte
-        if (distanceInKm < threshold) {
-          incidentCount++;
-          break; // On peut arrêter de vérifier les autres points de l'itinéraire pour cet incident
+      if (incident.incidentType.name == 'Travaux' || incident.incidentType.name == 'Incidents') {
+        for (var point in routePoints) {
+          double distanceInKm = distance.as(
+            LengthUnit.Kilometer,
+            LatLng(incident.localisation.latitude, incident.localisation.longitude),
+            point,
+          );
+
+          if (distanceInKm < threshold) {
+            incidentCount++;
+            break;
+          }
         }
       }
     }
@@ -594,7 +596,7 @@ class MapState extends State<Home> {
       final data = json.decode(response.body);
       final List<dynamic> coordinates = data['routes'][0]['geometry']['coordinates'];
 
-      final double distance = data['routes'][0]['distance']/1000;
+      final double distance = (data['routes'][0]['distance'] as num).toDouble();
 
       setState(() {
         routePoints = coordinates.map((point) => LatLng(point[1], point[0])).toList();
