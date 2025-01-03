@@ -1,4 +1,4 @@
-name: skeletton_projet_velo
+name: projet_velo_app_mobile
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -32,11 +32,25 @@ dependencies:
     sdk: flutter
   flutter_map: ">=6.0.0 <7.0.0"
   flutter_map_marker_cluster:
-  latlong2: ^0.9.0
-  cupertino_icons: ^1.0.6
-  go_router: ^13.2.4
+  latlong2: ^0.9.1
+  cupertino_icons: ^1.0.8
+  go_router: ^14.1.4
   url_strategy: ^0.2.0
   open_street_map_search_and_pick: ^0.1.1
+  flutter_native_splash: ^2.4.0
+  map_launcher: ^3.3.0
+  popover: ^0.2.8+2
+  geolocator: ^10.0.0
+  geocoding: ^3.0.0
+  permission_handler: ^11.3.1
+  flutter_compass: ^0.8.0
+  connectivity_plus: ^2.3.0
+  dio: ^5.4.3+1
+  google_fonts: ^6.2.1
+
+
+
+
 
 
 dev_dependencies:
@@ -55,6 +69,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  assets:
+    - assets/icons/
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
